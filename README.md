@@ -20,10 +20,10 @@
 
 ### Project description
 
-We plan to investigate a few different ML techniques for forecasting floods. The main goal is a comparison between those algorithms on this proposed subject. As a side goal, the open source development approach via github will result in a nice basis for further work.
+We plan to investigate various machine learning (ML) techniques for predicting floods. The main goal is a comparative study of some of the most promising ML methods on this proposed subject. As a side goal, the open source development approach via github will result in a nice basis for further work.
 
 ERA5 data will be used as predictor to model either the probability of exceeding some threshold in river discharge by the GloFAS reanalysis or to predict the severeness of the event given by the ECMWF’s severe event catalogue. We plan to investigate the impact of different meteorological variables, starting with direct precipitation output and combinations of thermodynamic and dynamic variables.
-Additionally, the results can be compared with GloFAS forecast reruns as well. Thereby, the gain/loss of ML techniques  to complex model output could potentially be determined.
+Additionally, the results can be compared with GloFAS forecast reruns as well. Thereby, the benefits and/or drawbacks of using ML techniques instead of coupled complex models can be explored.
 
 Our projected workflow can be seen below:
 
