@@ -1,0 +1,17 @@
+name: ml_flood
+channels:
+  - conda-forge
+dependencies:
+  - python=3
+  - numpy
+  - pandas
+  - matplotlib
+  - xarray
+  - cdsapi
+  - cartopy
+  - geopandas
+  - seaborn
+  - scikit-learn
+  - keras
+  - xgboost
+  - pyGAM
