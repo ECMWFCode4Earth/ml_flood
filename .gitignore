@@ -10,3 +10,4 @@ ml_flood_config.py
 /python/data/*
 auto_push.sh
 autocommit
+/archive/
