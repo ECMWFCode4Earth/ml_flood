@@ -3,6 +3,8 @@
 .ipynb_checkpoints
 *~
 ml_flood_config.py
+/data/
+/notebooks/__pycache__/
 /notebooks/data/
 /notebooks/data/*
 auto_push.sh
