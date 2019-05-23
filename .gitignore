@@ -2,4 +2,5 @@
 .DS_Store
 .ipynb_checkpoints
 *~
-/notebook/data/*
+/notebooks/data/
+/notebooks/data/*
