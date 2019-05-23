@@ -13,7 +13,7 @@ def build_request(kwargs, input_checking=True):
         raise IOError('base_level is pressure, but pressure_level not in kwargs')
         
     
-    mandatory_fields = ["product_type", "format", "year", "month"]
+    mandatory_fields = ["product_type", "variable", "format", "year", "month"]
     if not input_checking:
         mandatory_fields = []
     
