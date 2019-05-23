@@ -2,5 +2,7 @@
 .DS_Store
 .ipynb_checkpoints
 *~
+ml_flood_config.py
 /notebooks/data/
 /notebooks/data/*
+auto_push.sh
