@@ -2,6 +2,11 @@
 .DS_Store
 .ipynb_checkpoints
 *~
+/__pychache__/
+ml_flood_config.py
+/data/
+/notebooks/__pycache__/
 /notebooks/data/
 /notebooks/data/*
+auto_push.sh
 autocommit
