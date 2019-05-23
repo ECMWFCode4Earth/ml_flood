@@ -1,26 +1,12 @@
 *.pyc
-.DS_Store
+_Store
 .ipynb_checkpoints
 *~
 /__pychache__/
 ml_flood_config.py
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-/data/
-/notebooks/__pycache__/
->>>>>>> master
-/notebooks/data/
-/notebooks/data/*
-<<<<<<< HEAD
-auto_push.sh
-=======
-=======
 /data/
 /notebooks/__pycache__/
 /notebooks/data/
 /notebooks/data/*
 auto_push.sh
->>>>>>> 11ab025adcd3147796b206b1d9fdf887c03f836e
 autocommit
->>>>>>> b0c705dbabf1909706016d92a2f07fb7efdf455f
