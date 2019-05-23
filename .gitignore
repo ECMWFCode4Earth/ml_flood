@@ -6,4 +6,8 @@
 ml_flood_config.py
 /notebooks/data/
 /notebooks/data/*
+<<<<<<< HEAD
 auto_push.sh
+=======
+autocommit
+>>>>>>> b0c705dbabf1909706016d92a2f07fb7efdf455f
