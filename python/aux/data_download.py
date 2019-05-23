@@ -81,7 +81,7 @@ def cds_optimized_retrieval(years, months,
             request['month'] = m
             
             request = build_request(request)         
-	    varnamefile = "".join(list(request["variable"])).replace(' ','')
+            varnamefile = "".join(list(request["variable"])).replace(' ','')
             save_to_filename = f'{save_to_folder}/{dataset_name}_{varnamefile}_{y}_{m}.nc'
 
             # start a request for one month; only execute if file does not exist

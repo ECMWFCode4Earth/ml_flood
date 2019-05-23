@@ -5,8 +5,8 @@ _Store
 /__pychache__/
 ml_flood_config.py
 /data/
-/notebooks/__pycache__/
-/notebooks/data/
-/notebooks/data/*
+/python/__pycache__/
+/python/data/
+/python/data/*
 auto_push.sh
 autocommit
