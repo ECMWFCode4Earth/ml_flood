@@ -13,7 +13,7 @@ def build_request(kwargs, input_checking=True):
         raise IOError('base_level is pressure, but pressure_level not in kwargs')
         
     
-    mandatory_fields = ["product_type", "format", "variable", "year", "month"]
+    mandatory_fields = ["product_type", "format", "year", "month"]
     if not input_checking:
         mandatory_fields = []
     
@@ -63,8 +63,8 @@ def cds_optimized_retrieval(years, months,
 			    save_to_folder: str, 
                             N_parallel_requests=1):
     c = cdsapi.Client()
-    if N_parallel_requests>1:
-        p = mp.Pool(int(N_parallel_requests))
+    if N_parallel_requests<1: N_parallel_requests=1
+    p = mp.Pool(int(N_parallel_requests))
     
     # download era5 data with the cdsapi
     # data request efficiency is highest when executed on a monthly basis
@@ -80,9 +80,9 @@ def cds_optimized_retrieval(years, months,
             request['year'] = y
             request['month'] = m
             
-            request = build_request(request)         
-            varnamefile = "".join(list(request["variable"])).replace(' ','')
-            save_to_filename = f'{save_to_folder}/{dataset_name}_{varnamefile}_{y}_{m}.nc'
+            request = build_request(request)
+            varstr = ''.join(list(request_in['variable']))
+            save_to_filename = f'{save_to_folder}/{dataset_name}_{varstr}_{y}_{m}.nc'
 
             # start a request for one month; only execute if file does not exist
             if not os.path.isfile(save_to_filename):
