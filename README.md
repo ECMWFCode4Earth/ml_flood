@@ -30,12 +30,25 @@ Our projected workflow can be seen below:
 ![img](https://raw.githubusercontent.com/seblehner/seblehner.github.io/master/images/MATEHIW_flowchart.png)
 
 ### Dependencies and Setup
+**Some modules require Python 3!** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `
+```sh
+conda env create -f environment.yml
+```
+inside the
+```sh
+/ml_flood/
+```
+folder for a one-step installation of all dependencies. When installed, a new environment named **ml_flood** is created. Remember to use
+```sh
+source activate ml_flood
+```
+before executing any files.
 
-work in progress
 
 ### Data description
+We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/dev/docs/003_data_overview.ipynb).
 
-work in progress
+
 
 ### ML techniques
 

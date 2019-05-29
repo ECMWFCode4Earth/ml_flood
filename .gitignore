@@ -7,7 +7,6 @@ ml_flood_config.py
 /data/
 /python/__pycache__/
 /python/data/
-/python/data/*
 auto_push.sh
 autocommit
 /archive/
