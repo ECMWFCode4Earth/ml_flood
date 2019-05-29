@@ -46,7 +46,7 @@ before executing any files.
 
 
 ### Data description
-We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/dev/docs/003_data_overview.ipynb).
+We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/dev/docs/003_data_overview.ipynb).
 
 
 
