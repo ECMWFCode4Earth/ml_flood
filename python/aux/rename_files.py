@@ -1,4 +1,5 @@
 import os
+import os.path.join as pjoin
 
 def rename_files(path, old, new, str_constraint=None):
     """
@@ -10,8 +11,8 @@ def rename_files(path, old, new, str_constraint=None):
             if str_constraint in name:
                 if old in name:
                     name_new = name.replace(old, new)
-                    os.rename(f'{path}{name}', f'{path}{name_new}')
+                    os.rename(pjoin(path, name), pjoin(path, name_new))
         else:
             if old in name:
                 name_new = name.replace(old, new)
-                os.rename(f'{path}{name}', f'{path}{name_new}')
+                os.rename(pjoin(path, name), pjoin(path, name_new))
