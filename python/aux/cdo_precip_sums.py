@@ -8,7 +8,7 @@ def cdo_precip_sums(path, file_includes='precipitation'):
     """
     i = 0
     for name in os.listdir(path):
-        if file_includes in name and 'day' not in name and 'daysum' not in name:
+        if file_includes in name and 'dayavg' not in name and 'daysum' not in name:
             i += 1
             file_out = f'{path}{name[:-3]}_daysum.nc'
             print(f'file {i} of {37*12} ...')
