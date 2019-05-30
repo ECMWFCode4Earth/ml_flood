@@ -1,5 +1,5 @@
 import os
-import os.path.join as pjoin
+from os.path import join as pjoin
 
 def rename_files(path, old, new, str_constraint=None):
     """
