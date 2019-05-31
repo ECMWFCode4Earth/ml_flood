@@ -1,5 +1,6 @@
 import os
 from os.path import join as pjoin
+from os.path import isfile as isfile
 
 """
 contains various utility methods
@@ -15,10 +16,12 @@ def rename_files(path, old, new, str_constraint=None):
             if str_constraint in name:
                 if old in name:
                     name_new = name.replace(old, new)
+                    print(f'renaming {name} to {name_new} in {path} ...')
                     os.rename(pjoin(path, name), pjoin(path, name_new))
         else:
             if old in name:
                 name_new = name.replace(old, new)
+                print(f'renaming {name} to {name_new} in {path} ...')
                 os.rename(pjoin(path, name), pjoin(path, name_new))
 
                 
@@ -30,6 +33,7 @@ def cdo_daily_means(path, file_includes):
     for name in os.listdir(path):
         if file_includes in name and 'dayavg' not in name:
             name_new = f'{name[:-3]}_dayavg.nc'
+            print(f'calculating daily means for {name} to {name_new} in {path} ...')
             os.system(f'cdo dayavg {pjoin(path, name)} {pjoin(path, name_new)}')
             
 
@@ -41,20 +45,40 @@ def cdo_precip_sums(path, file_includes='precipitation'):
     for name in os.listdir(path):
         if file_includes in name and 'dayavg' not in name and 'daysum' not in name:
             name_new = f'{name[:-3]}_daysum.nc'
+            print(f'calculating daily sums for {name} to {name_new} in {path} ...')
             os.system(f'cdo -b 32 daysum {pjoin(path, name)} {pjoin(path, name_new)}')
             
             
-def cdo_clean_precip(path):
+def cdo_clean_precip(path, precip_type='precipitation'):
     """
-    loops through the given directory and and executes "ncks -v cp,tp filein.nc fileout.nc" or "ncks -x -v cp,tp filein.nc fileout.nc" for all files which contain 'precipitation' in their name and creates new files with the corresponding variables
+    loops through the given directory and and executes "ncks -v cp,tp filein.nc fileout.nc" or "ncks -x -v cp,tp filein.nc fileout.nc" for all files which contain precip_type in their name and creates new files with the corresponding variables
     """
     for name in os.listdir(path):
-        if 'precipitation' in name and 'dayavg' in name:
+        if precip_type in name and 'dayavg' in name:
             name_new = name.replace('total_precipitation_', '').replace('convective_precipitation_', '')
-            os.system(f'ncks -x -v tp,cp {pjoin(path, name)} {pjoin(path, name_new)}')
-        elif 'precipitation' in name and 'daysum' in name:
-            name_new = f'{name[:5]}total_precipitation_convective_precipitation_{name[-17:]}'
-            os.system(f'ncks -v tp,cp {pjoin(path, name)} {pjoin(path, name_new)}')
+            if isfile(pjoin(path, name_new)):
+                print(f'{name_new} already exists in {path}, delete it first before running again!')
+            else:
+                print(f'clear precipitation vars from {name} to {name_new} in {path} ...')
+                os.system(f'ncks -x -v tp,cp {pjoin(path, name)} {pjoin(path, name_new)}')
+        elif precip_type in name and 'daysum' in name:
+            name_new = f'era5_total_precipitation_convective_precipitation_{name[-17:]}'
+            if isfile(pjoin(path, name_new)):
+                print(f'{name_new} already exists in {path}, delete it first before running again!')
+            else:
+                print(f'write precipitation vars from {name} to {name_new} in {path} ...')
+                os.system(f'ncks -v tp,cp {pjoin(path, name)} {pjoin(path, name_new)}')
             
 
+def cdo_merge_time(path, file_includes, new_file):
+    """
+    merges all files including a specified string in their name within the given directory into the specified new file
+    """
+    if isfile(pjoin(path, new_file)):
+        print(f'{new_file} already exists in {path}, delete it first before running again!')
+    else:
+        print(f'merging time for files including "{file_includes}" into {new_file} in {path} ...')
+        os.system(f'cdo mergetime {pjoin(path, f"*{file_includes}*")} {pjoin(path, new_file)}')
+            
+            
             
