@@ -1,6 +1,7 @@
 import os
 from os.path import join as pjoin
 from os.path import isfile as isfile
+import xarray as xr
 
 """
 contains various utility methods
@@ -79,6 +80,29 @@ def cdo_merge_time(path, file_includes, new_file):
     else:
         print(f'merging time for files including "{file_includes}" into {new_file} in {path} ...')
         os.system(f'cdo mergetime {pjoin(path, f"*{file_includes}*")} {pjoin(path, new_file)}')
-            
-            
-            
+   
+
+def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
+    """
+    Calculates the first three statistical moments in the specified dimension. Takes a xarray dataset as input.
+    """
+    if dim_aggregator == 'spatial':
+        dim_aggregator = ['latitude', 'longitude']
+    else:
+        dim_aggregator='time'
+        
+    if time_constraint == 'seasonally':
+        mu = ds.groupby('time.season').mean(dim=dim_aggregator)
+        sig = ds.groupby('time.season').std(dim=dim_aggregator)
+    elif time_constraint == 'monthly':
+        mu = ds.groupby('time.month').mean(dim=dim_aggregator)
+        sig = ds.groupby('time.month').std(dim=dim_aggregator)
+    else:
+        mu = ds.mean(dim=dim_aggregator)
+        sig = ds.std(dim=dim_aggregator)
+        
+    ds_new = xr.concat([mu, sig], dim='stat_moments')
+    ds_new.coords['stat_moments'] = ['mean', 'std']
+    return ds_new
+
+
