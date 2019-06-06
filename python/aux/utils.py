@@ -104,5 +104,3 @@ def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     ds_new = xr.concat([mu, sig], dim='stat_moments')
     ds_new.coords['stat_moments'] = ['mean', 'std']
     return ds_new
-
-
