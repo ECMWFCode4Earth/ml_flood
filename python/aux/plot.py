@@ -55,6 +55,9 @@ class Map(object):
         """Wraps xr.DataArray.plot.pcolormesh and formats the plot as configured
         in the call to Map().
         
+        title is xar.long_name
+        cbar_label is xar.units
+        
         Parameters
         ----------
         xar : xr.DataArray
@@ -67,6 +70,10 @@ class Map(object):
         fig : matplotlib.pyplot.figure 
         ax : matplotlib.pyplot.axis
         """
+        for dim in ['longitude', 'latitude']:
+            if dim not in xar:
+                raise KeyError(dim+' not found!')
+        
         plt.close()
         fig = plt.figure(**self.fig_kws)
         
@@ -74,11 +81,6 @@ class Map(object):
             self.proj = choose_proj_from_xar(xar)
         ax = plt.axes(projection=self.proj)
 
-        states_provinces = cfeature.NaturalEarthFeature(
-            category='cultural',
-            name='admin_1_states_provinces_lines',
-            scale='50m',
-            facecolor='none')
         countries = cfeature.NaturalEarthFeature(
             category='cultural',
             name='admin_0_boundary_lines_land',
@@ -90,7 +92,6 @@ class Map(object):
 
         ax.add_feature(countries, edgecolor='grey')
         ax.coastlines('50m')
-        #ax.add_feature(states_provinces, edgecolor='gray')
         ax.add_feature(rivers, edgecolor='blue')
 
         if self.drainage_baisins:
@@ -99,11 +100,18 @@ class Map(object):
                                            self.transform, edgecolor='black')
             ax.add_feature(shape_feature, facecolor='none', edgecolor='green')
             
-        kwargs.pop('add_colorbar', None)
+            
+        cbar_kwargs = kwargs.pop('cbar_kwargs', dict())
+        subplot_kws = kwargs.pop('subplot_kws', dict())
+        subplot_kws['projection'] = self.proj
+        
+        # colorbar preset to match height of plot
+        if 'fraction' not in cbar_kwargs: cbar_kwargs['fraction'] = 0.025
+        
         im = xar.plot.pcolormesh(ax=ax, transform=self.transform, 
-                                 subplot_kws={'projection': self.proj}, 
-                                 add_colorbar=False, **kwargs)
-        plt.colorbar(im, fraction=0.025, pad=0.04)
+                                 subplot_kws=subplot_kws, 
+                                 cbar_kwargs=cbar_kwargs,
+                                 **kwargs)
         return fig, ax
 
     def plot_point(self, ax, lat, lon):
