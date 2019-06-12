@@ -71,8 +71,8 @@ class Map(object):
         ax : matplotlib.pyplot.axis
         """
         for dim in ['longitude', 'latitude']:
-            if dim not in xar:
-                raise KeyError(dim+' not found!')
+            if dim not in xar.coords:
+                raise KeyError(dim+' not found in coordinates!')
         
         plt.close()
         fig = plt.figure(**self.fig_kws)
