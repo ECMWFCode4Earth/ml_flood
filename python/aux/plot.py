@@ -8,11 +8,7 @@ import cartopy.feature as cfeature
 from cartopy.io.shapereader import Reader
 from cartopy.feature import ShapelyFeature
 import seaborn as sns
-
-import dask
 import xarray as xr
-from dask.distributed import Client
-client = Client(processes=True)
 
 def choose_proj_from_xar(da):
     lon = da.coords['longitude'].values
