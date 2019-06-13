@@ -6,6 +6,7 @@ _Store
 ml_flood_config.py
 /data/
 /python/__pycache__/
+/python/dask-worker-space/
 /python/data/
 auto_push.sh
 autocommit

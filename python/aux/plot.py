@@ -114,3 +114,10 @@ class Map(object):
         ax.plot(lon, lat, color='cyan', marker='o', 
                      markersize=20, mew=4, markerfacecolor='none',
                      transform=self.transform)
+        
+def plot_ts(da, key):
+    """Plot a times series for a given xarray dataarray.
+    """
+    p = sns.lineplot(data=da.to_pandas(), linewidth=2)
+    p.set_xlabel('time')
+    p.set_ylabel(key)

@@ -80,8 +80,8 @@ def cdo_merge_time(path, file_includes, new_file):
     else:
         print(f'merging time for files including "{file_includes}" into {new_file} in {path} ...')
         os.system(f'cdo mergetime {pjoin(path, f"*{file_includes}*")} {pjoin(path, new_file)}')
-   
 
+        
 def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     """
     Calculates the first three statistical moments in the specified dimension. Takes a xarray dataset as input.
@@ -90,7 +90,7 @@ def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
         dim_aggregator = ['latitude', 'longitude']
     else:
         dim_aggregator='time'
-        
+
     if time_constraint == 'seasonally':
         mu = ds.groupby('time.season').mean(dim=dim_aggregator)
         sig = ds.groupby('time.season').std(dim=dim_aggregator)
@@ -100,7 +100,26 @@ def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     else:
         mu = ds.mean(dim=dim_aggregator)
         sig = ds.std(dim=dim_aggregator)
-        
+
     ds_new = xr.concat([mu, sig], dim='stat_moments')
     ds_new.coords['stat_moments'] = ['mean', 'std']
     return ds_new
+
+
+def spatial_cov(da, lat=49, lon=14, time_constraint=None):
+    """
+    Calculates the spatial covariance for the specified point (lat, lon) under the specified time constraint.
+    """
+    if not isinstance(da, xr.core.dataarray.DataArray):
+        print('data input has to be a xarray data array')
+    anomalies = da - da.mean('time')
+    point = dict(latitude=lat, longitude=lon)
+    return da.loc[point].dot(da)
+
+
+
+
+
+
+
+
