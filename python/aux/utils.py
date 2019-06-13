@@ -33,7 +33,7 @@ def cdo_daily_means(path, file_includes):
     """
     for name in os.listdir(path):
         if file_includes in name and 'dayavg' not in name:
-            name_new = f'{name[:-3]}_dayavg.nc'
+            name_new = f"{''.join(name.split('.')[:-1])}_dayavg.{name.split('.')[-1]}"
             print(f'calculating daily means for {name} to {name_new} in {path} ...')
             os.system(f'cdo dayavg {pjoin(path, name)} {pjoin(path, name_new)}')
             
@@ -45,7 +45,7 @@ def cdo_precip_sums(path, file_includes='precipitation'):
     """
     for name in os.listdir(path):
         if file_includes in name and 'dayavg' not in name and 'daysum' not in name:
-            name_new = f'{name[:-3]}_daysum.nc'
+            name_new = f"{''.join(name.split('.')[:-1])}_daysum.{name.split('.')[-1]}"
             print(f'calculating daily sums for {name} to {name_new} in {path} ...')
             os.system(f'cdo -b 32 daysum {pjoin(path, name)} {pjoin(path, name_new)}')
             
@@ -73,7 +73,7 @@ def cdo_clean_precip(path, precip_type='precipitation'):
 
 def cdo_merge_time(path, file_includes, new_file):
     """
-    merges all files including a specified string in their name within the given directory into the specified new file
+    merges all files including a specified string in their name within the given directory into the specified new file with "cdo mergetime *file_includes* fileout.nc"
     """
     if isfile(pjoin(path, new_file)):
         print(f'{new_file} already exists in {path}, delete it first before running again!')
@@ -81,7 +81,18 @@ def cdo_merge_time(path, file_includes, new_file):
         print(f'merging time for files including "{file_includes}" into {new_file} in {path} ...')
         os.system(f'cdo mergetime {pjoin(path, f"*{file_includes}*")} {pjoin(path, new_file)}')
 
+
+def cdo_spatial_cut(path, file_includes, new_file_includes, lonmin, lonmax, latmin, latmax):
+    """
+    loops through the given directory and and executes "cdo -sellonlatbox,lonmin,lonmax,latmin,latmax *file_includes* fileout.nc" appends "spatial_cut_*new_file_includes*" at the end of the filename
+    """
+    for name in os.listdir(path):
+        if file_includes in name and 'spatial_cut' not in name:
+            name_new = f"{''.join(name.split('.')[:-1])}_spatial_cut_{new_file_includes}.{name.split('.')[-1]}"
+            print(f'extracting region: {name} to {name_new} in {path} ...')
+            os.system(f'cdo -sellonlatbox,{lonmin},{lonmax},{latmin},{latmax} {pjoin(path, name)} {pjoin(path, name_new)}')
         
+
 def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     """
     Calculates the first three statistical moments in the specified dimension. Takes a xarray dataset as input.
