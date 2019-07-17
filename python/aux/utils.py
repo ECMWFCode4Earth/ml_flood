@@ -2,7 +2,8 @@ import os
 from os.path import join as pjoin
 from os.path import isfile as isfile
 import xarray as xr
-
+import pandas as pd
+import datetime as datetime
 """
 contains various utility methods
 """
@@ -111,9 +112,10 @@ def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     else:
         mu = ds.mean(dim=dim_aggregator)
         sig = ds.std(dim=dim_aggregator)
+    vc = sig**2/mu
 
-    ds_new = xr.concat([mu, sig], dim='stat_moments')
-    ds_new.coords['stat_moments'] = ['mean', 'std']
+    ds_new = xr.concat([mu, sig, vc], dim='stat_moments')
+    ds_new.coords['stat_moments'] = ['mean', 'std', 'vc']
     return ds_new
 
 
@@ -128,8 +130,22 @@ def spatial_cov(da, lat=49, lon=14, time_constraint=None):
     return da.loc[point].dot(da)
 
 
-
-
+def open_data(path, kw='era5'):
+    """
+    Opens all available ERA5/glofas datasets (depending on the keyword) in the specified path and
+    resamples time to match the timestamp /per day (through the use of cdo YYYYMMDD 23z is the
+    corresponding timestamp) in the case of era5, or renames lat lon in the case of glofas.
+    """
+    if kw is 'era5':    
+        ds = xr.open_mfdataset(path+'*era5*')
+        #ds.coords['time'] = pd.to_datetime(ds.coords['time'].values) - datetime.timedelta(hours=23)
+    elif kw is 'glofas_ra':
+        ds = xr.open_mfdataset(path+'*glofas_reanalysis*')
+        ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
+    elif kw is 'glofas_fr':
+        ds = xr.open_mfdataset(path+'*glofas_forecast*')
+        ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
+    return ds
 
 
 

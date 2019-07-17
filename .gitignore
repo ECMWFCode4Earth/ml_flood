@@ -8,6 +8,7 @@ ml_flood_config.py
 /python/__pycache__/
 /python/dask-worker-space/
 /python/data/
+/python/save/
 auto_push.sh
 autocommit
 /archive/
