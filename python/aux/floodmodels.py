@@ -47,9 +47,7 @@ class FlowModel_DNN(object):
         self.callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                             min_delta=1, patience=100, verbose=0, mode='auto',
                             baseline=None, restore_best_weights=True),]
-                         #keras.callbacks.ModelCheckpoint(self.cfg.get('filepath'), 
-                         #   monitor='val_loss', verbose=0, save_best_only=True, 
-                         #   save_weights_only=False, mode='auto', period=1),]
+
 
     def predict(self, Xda):
         return self.model.predict(Xda)
@@ -83,18 +81,6 @@ class FlowModel(object):
         # use with xarray, return xarray
         a = self.m.predict(Xda.values).squeeze()
         return add_time(a, Xda.time, name=name)
-    
-#def FlowModel(kind, model_config):
-#    if kind=='neural_net':
-#        return FlowModel_DNN(**model_config)
-#    elif kind=='xgboost':
-#        return XGBRegressor(**model_config)
-#    elif kind=='Ridge':
-#        return RidgeCV(**model_config)
-#    else:
-#        raise NotImplementedError(str(kind)+' not defined')
-                
-                
                 
                 
             
