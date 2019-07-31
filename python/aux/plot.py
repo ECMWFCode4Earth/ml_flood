@@ -14,9 +14,14 @@ def choose_proj_from_xar(da):
     lon = da.coords['longitude'].values
     lat = da.coords['latitude'].values
     lon_center = lon[int(len(lon)/2)]
+    lat_center = lat[int(len(lat)/2)]
     if np.abs(lat.mean()) > 30:
-        return ccrs.LambertConformal(central_longitude=lon_center, 
-                                     central_latitude=lat.mean())
+        return ccrs.Mercator(central_longitude=lon_center, min_latitude=lat.min()-1,
+                             max_latitude=lat.max()+1, globe=None,
+                             latitude_true_scale=lat_center)
+
+#        return ccrs.LambertConformal(central_longitude=lon_center, 
+#                                     central_latitude=lat.mean())
     else:
         return ccrs.PlateCarree(central_longitude=lon_center)
 
@@ -29,7 +34,7 @@ class Map(object):
         Parameters
         ----------
         projection : cartopy.crs projection
-            if None, use LambertConformal for midlatitudes and PlateCarree for tropics
+            if None, use Mercator (old: LambertConformal) for midlatitudes and PlateCarree for tropics
         transform : cartopy.crs projection
             default is PlateCarree
         figure_kws : dict
@@ -85,11 +90,13 @@ class Map(object):
         rivers = cfeature.NaturalEarthFeature(scale='50m', category='physical',
                                               name='rivers_lake_centerlines', 
                                               edgecolor='blue', facecolor='none')
-
+        
         ax.add_feature(countries, edgecolor='grey')
         ax.coastlines('50m')
         ax.add_feature(rivers, edgecolor='blue')
-
+        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True)
+        gl.xlabels_top = False
+        
         if self.drainage_baisins:
             sf = Reader("../data/drainage_basins/Major_Basins_of_the_World.shp")
             shape_feature = ShapelyFeature(sf.geometries(),
@@ -100,13 +107,19 @@ class Map(object):
         cbar_kwargs = kwargs.pop('cbar_kwargs', dict())
         subplot_kws = kwargs.pop('subplot_kws', dict())
         subplot_kws['projection'] = self.proj
+
+        # choose which colormap to use: pos and neg values => RdYlGn, else inferno
+        if ((xar.max()-xar.min()) > xar.max()):
+            cmap = 'RdYlGn'
+        else:
+            cmap = 'spring_r'
         
         # colorbar preset to match height of plot
-        if 'fraction' not in cbar_kwargs: cbar_kwargs['fraction'] = 0.025
+        #if 'fraction' not in cbar_kwargs: cbar_kwargs['fraction'] = 0.015
         
         im = xar.plot.pcolormesh(ax=ax, transform=self.transform, 
                                  subplot_kws=subplot_kws, 
-                                 cbar_kwargs=cbar_kwargs,
+                                 cmap=cmap,
                                  **kwargs)
         return fig, ax
 

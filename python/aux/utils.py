@@ -96,7 +96,7 @@ def cdo_spatial_cut(path, file_includes, new_file_includes, lonmin, lonmax, latm
 
 def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     """
-    Calculates the first three statistical moments in the specified dimension. Takes a xarray dataset as input.
+    Calculates the first two statistical moments and the coefficient of variation in the specified dimension. Takes a xarray dataset as input.
     """
     if dim_aggregator == 'spatial':
         dim_aggregator = ['latitude', 'longitude']
@@ -119,15 +119,42 @@ def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     return ds_new
 
 
-def spatial_cov(da, lat=49, lon=14, time_constraint=None):
+def spatial_cov(da, lat=48, lon=15, time_constraint=None):
     """
     Calculates the spatial covariance for the specified point (lat, lon) under the specified time constraint.
     """
+    import numpy as np
     if not isinstance(da, xr.core.dataarray.DataArray):
         print('data input has to be a xarray data array')
+    # set nans to zero, or else the dot function will return nans
+    da = da.where(~np.isnan(da), 0)
+    da = da.load()
     anomalies = da - da.mean('time')
     point = dict(latitude=lat, longitude=lon)
-    return da.loc[point].dot(da)
+    scal_prod = (anomalies.loc[point].dot(anomalies)).compute()
+    stds = (da.loc[point].std(dim='time')*da.std(dim='time')).compute()
+    total_num = da.time.shape[0]
+    return scal_prod/stds/total_num
+
+
+def spatial_cov_2var(da_point, da):
+    """
+    Calculates the spatial covariance for the point series da_point and the 3D data array da.
+    """
+    import numpy as np
+    if not isinstance(da, xr.core.dataarray.DataArray):
+        print('data input has to be a xarray data array')
+    # set nans to zero, or else the dot function will return nans
+    da = da.where(~np.isnan(da), 0)
+    da_point = da_point.where(~np.isnan(da_point), 0)
+    da = da.load()
+    da_point = da_point.load()
+    anomalies = (da - da.mean('time'))#/da.std(dim='time')
+    anomalies_point = (da_point - da_point.mean('time'))#/da_point.std(dim='time')
+    scal_prod = (anomalies_point.dot(anomalies)).compute()
+    stds = (da_point.std(dim='time')*da.std(dim='time')).compute()
+    total_num = da.time.shape[0]
+    return scal_prod/stds/total_num
 
 
 def open_data(path, kw='era5'):
