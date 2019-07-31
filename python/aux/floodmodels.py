@@ -6,10 +6,9 @@ from sklearn.pipeline import Pipeline
 from dask_ml.preprocessing import StandardScaler
 #from dask_ml.decomposition import PCA
 
-#from dask_ml.xgboost import XGBRegressor
-#from dask_ml.linear_model import LogisticRegression
+from dask_ml.xgboost import XGBRegressor
 #from dask_ml.linear_model import LinearRegression
-#from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge
 
 import h5py
 import keras
@@ -68,10 +67,12 @@ class FlowModel_DNN(object):
     
 class FlowModel(object):
     def __init__(self, kind, **kwargs):
-        if kind=='NN':
+        if kind=='neural_net':
             return FlowModel_DNN(**kwargs)
         elif kind=='xgboost':
-            return None
+            return XGBRegressor(**kwargs)
+        elif kind=='Ridge':
+            return Ridge(**kwargs)
         else:
             raise NotImplementedError(str(kind)+' not defined')
                 
