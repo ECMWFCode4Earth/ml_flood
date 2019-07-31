@@ -66,14 +66,14 @@ class FlowModel_DNN(object):
     
     
     
-    class FlowModel(object):
-        def __init__(self, kind, **kwargs):
-            if kind=='NN':
-                return FlowModel_DNN(**kwargs)
-            elif kind=='xgboost':
-                return None
-            else:
-                raise NotImplementedError(str(kind)+' not defined')
+class FlowModel(object):
+    def __init__(self, kind, **kwargs):
+        if kind=='NN':
+            return FlowModel_DNN(**kwargs)
+        elif kind=='xgboost':
+            return None
+        else:
+            raise NotImplementedError(str(kind)+' not defined')
                 
                 
                 
