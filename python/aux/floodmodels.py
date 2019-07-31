@@ -6,10 +6,9 @@ from sklearn.pipeline import Pipeline
 from dask_ml.preprocessing import StandardScaler
 #from dask_ml.decomposition import PCA
 
-#from dask_ml.xgboost import XGBRegressor
-#from dask_ml.linear_model import LogisticRegression
+from dask_ml.xgboost import XGBRegressor
 #from dask_ml.linear_model import LinearRegression
-#from sklearn.linear_model import Ridge
+from sklearn.linear_model import RidgeCV
 
 import h5py
 import keras
@@ -46,15 +45,12 @@ class FlowModel_DNN(object):
         self.model = model
 
         self.callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
-                            min_delta=1, patience=10, verbose=0, mode='auto',
-                            baseline=None, restore_best_weights=True),
-                         keras.callbacks.ModelCheckpoint(self.cfg.get('filepath'), 
-                            monitor='val_loss', verbose=0, save_best_only=True, 
-                            save_weights_only=False, mode='auto', period=1),]
+                            min_delta=1, patience=100, verbose=0, mode='auto',
+                            baseline=None, restore_best_weights=True),]
 
-    def predict(self, Xda, name=None):
-        a = self.model.predict(Xda.values).squeeze()
-        return add_time(a, Xda.time, name=name)
+
+    def predict(self, Xda):
+        return self.model.predict(Xda)
 
     def fit(self, Xda, yda, **kwargs):
         return self.model.fit(Xda, yda.reshape(-1,1),
@@ -63,19 +59,28 @@ class FlowModel_DNN(object):
                               callbacks=self.callbacks,
                               verbose=0,
                               **kwargs)
-    
-    
+
     
 class FlowModel(object):
-    def __init__(self, kind, **kwargs):
-        if kind=='NN':
-            return FlowModel_DNN(**kwargs)
+    def __init__(self, kind, model_config):
+        """Model selection & Xarray compatibility"""
+        self.kind = kind
+        if kind=='neural_net':
+            self.m = FlowModel_DNN(**model_config)
         elif kind=='xgboost':
-            return None
+            self.m = XGBRegressor(**model_config)
+        elif kind=='Ridge':
+            self.m = RidgeCV(**model_config)
         else:
             raise NotImplementedError(str(kind)+' not defined')
-                
-                
+    
+    def fit(self, Xda, yda, **kwargs):
+        return self.m.fit(Xda, yda, **kwargs)
+    
+    def predict(self, Xda, name=None):
+        # use with xarray, return xarray
+        a = self.m.predict(Xda.values).squeeze()
+        return add_time(a, Xda.time, name=name)
                 
                 
             
