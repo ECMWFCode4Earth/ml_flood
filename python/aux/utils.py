@@ -175,5 +175,7 @@ def open_data(path, kw='era5'):
     return ds
 
 
-
+def shift_time(ds, value):
+    ds.coords['time'].values = pd.to_datetime(ds.coords['time'].values) + value
+    return ds
 
