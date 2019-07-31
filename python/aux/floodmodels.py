@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import xarray as xr
 
 from sklearn.pipeline import Pipeline
 from dask_ml.preprocessing import StandardScaler
