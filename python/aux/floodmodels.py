@@ -191,3 +191,70 @@ def train_flowmodel(X, y, pipe,
                 fig.savefig(f_valid); plt.close('all')
             except Exception as e:
                 warnings.warn(str(e))
+
+                
+class LocalModel_DNN(object):
+    """Define the internals of the neural-network transport model."""
+    def __init__(self, **kwargs):
+        model = keras.models.Sequential()
+        self.cfg = kwargs
+
+        model.add(keras.layers.BatchNormalization())
+
+        model.add(Dropout(0.25))
+        model.add(keras.layers.Dense(8,
+                                  kernel_initializer=keras.initializers.Zeros(),
+                                  kernel_regularizer=keras.regularizers.l2(1e-5),
+                                  bias_initializer='zeros',
+                                  activation='relu'))
+
+        model.add(keras.layers.Dense(1, activation='linear'))
+
+        #opti = keras.optimizers.RMSprop(lr=.05)
+        opti = keras.optimizers.Adadelta(lr=0.05, rho=0.95, epsilon=None, decay=0.0)
+        #opti = keras.optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.8, nesterov=True)
+
+        model.compile(loss='mean_squared_error',
+                      optimizer=opti)
+        self.model = model
+
+        self.callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+                            min_delta=1, patience=100, verbose=0, mode='auto',
+                            baseline=None, restore_best_weights=True),]
+
+
+    def predict(self, Xda):
+        return self.model.predict(Xda)
+
+    def fit(self, Xda, yda, **kwargs):
+        return self.model.fit(Xda, yda.reshape(-1,1),
+                              epochs=self.cfg.get('epochs', None),
+                              batch_size=512,
+                              callbacks=self.callbacks,
+                              verbose=0,
+                              **kwargs)
+                
+class LocalModel(object):
+    """Model selection & Xarray compatibility,
+    currently the same as FlowModel
+    """
+    def __init__(self, kind, model_config):
+        self.kind = kind
+        if kind=='neural_net':
+            self.m = LocalModel_DNN(**model_config)
+        elif kind=='xgboost':
+            self.m = XGBRegressor(**model_config)
+        elif kind=='Ridge':
+            self.m = RidgeCV(**model_config)
+        else:
+            raise NotImplementedError(str(kind)+' not defined')
+
+    def fit(self, Xda, yda, **kwargs):
+        return self.m.fit(Xda, yda, **kwargs)
+
+    def predict(self, Xda, name=None):
+        # use with xarray, return xarray
+        a = self.m.predict(Xda.values).squeeze()
+        return add_time(a, Xda.time, name=name)
+    
+    
