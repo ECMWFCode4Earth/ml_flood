@@ -136,14 +136,15 @@ def open_data(path, kw='era5'):
     resamples time to match the timestamp /per day (through the use of cdo YYYYMMDD 23z is the
     corresponding timestamp) in the case of era5, or renames lat lon in the case of glofas.
     """
+    combine = 'by_coords'
     if kw is 'era5':    
-        ds = xr.open_mfdataset(path+'*era5*')
+        ds = xr.open_mfdataset(path+'*era5*', combine=combine)
         #ds.coords['time'] = pd.to_datetime(ds.coords['time'].values) - datetime.timedelta(hours=23)
     elif kw is 'glofas_ra':
-        ds = xr.open_mfdataset(path+'*glofas_reanalysis*')
+        ds = xr.open_mfdataset(path+'*glofas_reanalysis*', combine=combine)
         ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
     elif kw is 'glofas_fr':
-        ds = xr.open_mfdataset(path+'*glofas_forecast*')
+        ds = xr.open_mfdataset(path+'*glofas_forecast*', combine=combine)
         ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
     return ds
 
