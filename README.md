@@ -14,6 +14,7 @@
 * [Project description](#Project-description)
 * [Dependencies and Setup](#Dependencies-and-Setup)
 * [Data description](#Data-description)
+* [Model structure](#Model-structure)
 * [ML techniques](#ML-techniques)
 * [Acknowledgments](#Acknowledgments)
 
@@ -50,13 +51,17 @@ We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed
 
 
 ### Model structure
-Our model structure is layed out in the flowchart below. Due to the large inluence on different features as well as their spatial and temporal state, we split the whole process up into two models. The first encompasses changes in discharge happening due to non-local reasons (e.g. large-scale precipitation a few hundred kilometres upstream, affecting the flow at a certain point a few days later) and the second includes local effects from features like precipitation and their impact on discharge. For more detail see the notebooks in the **docs/** folder.
+Our model structure is layed out in the flowchart below. Due to the large inluence on different features as well as their spatial and temporal state, we split the whole process up into two models. The first encompasses changes in discharge happening due to non-local reasons (e.g. large-scale precipitation a few hundred kilometres upstream, affecting the flow at a certain point a few days later) and the second includes local effects from features like precipitation and their impact on discharge. For more detail see the notebooks in the **/docs/** folder.
 
 ![img](https://raw.githubusercontent.com/esowc/ml_flood/dev/docs/resources/model-steps_v2-1.png)
 
 
 ### ML techniques
-
+Currently implemented:
+  - Dense Neural Net via keras
+  - RidgeCV via sklearn
+  - xgboost via dask_ml
+  
 work in progress
 
 ### Acknowledgments
