@@ -27,7 +27,7 @@ Additionally, the results can be compared with GloFAS forecast reruns as well. T
 
 Our projected workflow can be seen below:
 
-![img](https://raw.githubusercontent.com/seblehner/seblehner.github.io/master/images/MATEHIW_flowchart.png)
+![img](https://raw.githubusercontent.com/esowc/ml_flood/dev/docs/resources/MATEHIW_flowchart.png)
 
 ### Dependencies and Setup
 **Some modules require Python 3!** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `
@@ -48,6 +48,11 @@ before executing any files.
 ### Data description
 We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/dev/docs/003_data_overview.ipynb).
 
+
+### Model structure
+Our model structure is layed out in the flowchart below. Due to the large inluence on different features as well as their spatial and temporal state, we split the whole process up into two models. The first encompasses changes in discharge happening due to non-local reasons (e.g. large-scale precipitation a few hundred kilometres upstream, affecting the flow at a certain point a few days later) and the second includes local effects from features like precipitation and their impact on discharge. For more detail see the notebooks in the **docs/** folder.
+
+![img](https://raw.githubusercontent.com/esowc/ml_flood/dev/docs/resources/model-steps_v2-1.png)
 
 
 ### ML techniques
