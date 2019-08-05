@@ -165,8 +165,11 @@ def open_data(path, kw='era5'):
     """
     combine = 'by_coords'
     if kw is 'era5':    
-        ds = xr.open_mfdataset(path+'*era5*', combine=combine)
-        #ds.coords['time'] = pd.to_datetime(ds.coords['time'].values) - datetime.timedelta(hours=23)
+        ds = xr.open_dataset(path+'era5_danube_pressure_and_single_levels.nc')
+        static = xr.open_dataset(path+'era5_slt_z_slor_lsm_stationary_field.nc')
+        static = static.isel(time=0).drop('time')
+        static = static.rename(dict(z='z_topo'))
+        ds = xr.merge([ds, static])
     elif kw is 'glofas_ra':
         ds = xr.open_mfdataset(path+'*glofas_reanalysis*', combine=combine)
         ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
