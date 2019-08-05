@@ -9,9 +9,11 @@ from joblib import dump, load   # saving and loading pipeline objects ("models")
 
 from sklearn.base import clone
 from sklearn.pipeline import Pipeline
-from dask_ml.preprocessing import StandardScaler
-from dask_ml.decomposition import PCA
-from dask_ml.xgboost import XGBRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+#import xgboost as xgb
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import AdaBoostRegressor
 from sklearn.linear_model import RidgeCV
 
 import keras
@@ -201,12 +203,17 @@ class LocalModel_DNN(object):
 
         model.add(keras.layers.BatchNormalization())
 
-        model.add(Dropout(0.25))
+        #model.add(Dropout(0.25))
         model.add(keras.layers.Dense(8,
                                   kernel_initializer=keras.initializers.Zeros(),
-                                  kernel_regularizer=keras.regularizers.l2(1e-5),
+                                  #kernel_regularizer=keras.regularizers.l2(1e-5),
                                   bias_initializer='zeros',
                                   activation='relu'))
+        model.add(keras.layers.Dense(8,
+                          kernel_initializer=keras.initializers.Zeros(),
+                          #kernel_regularizer=keras.regularizers.l2(1e-5),
+                          bias_initializer='zeros',
+                          activation='relu'))
 
         model.add(keras.layers.Dense(1, activation='linear'))
 
@@ -244,6 +251,9 @@ class LocalModel(object):
             self.m = LocalModel_DNN(**model_config)
         elif kind=='xgboost':
             self.m = XGBRegressor(**model_config)
+        elif kind=='adaboost':
+            self.m = AdaBoostRegressor(DecisionTreeRegressor(max_depth=2),
+                                       n_estimators=200)
         elif kind=='Ridge':
             self.m = RidgeCV(**model_config)
         else:
@@ -256,5 +266,6 @@ class LocalModel(object):
         # use with xarray, return xarray
         a = self.m.predict(Xda.values).squeeze()
         return add_time(a, Xda.time, name=name)
+    
     
     
