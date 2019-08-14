@@ -1,11 +1,11 @@
 import os
 from os.path import join as pjoin
 from os.path import isfile as isfile
-import xarray as xr
+import numpy as np
 import pandas as pd
-import datetime as datetime
+import xarray as xr
 """
-contains various utility methods
+Contains various utility methods
 """
 
 def rename_files(path, old, new, str_constraint=None):
@@ -26,7 +26,7 @@ def rename_files(path, old, new, str_constraint=None):
                 print(f'renaming {name} to {name_new} in {path} ...')
                 os.rename(pjoin(path, name), pjoin(path, name_new))
 
-                
+
 def cdo_daily_means(path, file_includes):
     """
     loops through the given directory and and executes "cdo dayavg *file_includes* file_out"
@@ -37,7 +37,7 @@ def cdo_daily_means(path, file_includes):
             name_new = f"{''.join(name.split('.')[:-1])}_dayavg.{name.split('.')[-1]}"
             print(f'calculating daily means for {name} to {name_new} in {path} ...')
             os.system(f'cdo dayavg {pjoin(path, name)} {pjoin(path, name_new)}')
-            
+
 
 def cdo_precip_sums(path, file_includes='precipitation'):
     """
@@ -49,8 +49,8 @@ def cdo_precip_sums(path, file_includes='precipitation'):
             name_new = f"{''.join(name.split('.')[:-1])}_daysum.{name.split('.')[-1]}"
             print(f'calculating daily sums for {name} to {name_new} in {path} ...')
             os.system(f'cdo -b 32 daysum {pjoin(path, name)} {pjoin(path, name_new)}')
-            
-            
+
+
 def cdo_clean_precip(path, precip_type='precipitation'):
     """
     loops through the given directory and and executes "ncks -v cp,tp filein.nc fileout.nc" or "ncks -x -v cp,tp filein.nc fileout.nc" for all files which contain precip_type in their name and creates new files with the corresponding variables
@@ -70,7 +70,7 @@ def cdo_clean_precip(path, precip_type='precipitation'):
             else:
                 print(f'write precipitation vars from {name} to {name_new} in {path} ...')
                 os.system(f'ncks -v tp,cp {pjoin(path, name)} {pjoin(path, name_new)}')
-            
+
 
 def cdo_merge_time(path, file_includes, new_file):
     """
@@ -92,16 +92,29 @@ def cdo_spatial_cut(path, file_includes, new_file_includes, lonmin, lonmax, latm
             name_new = f"{''.join(name.split('.')[:-1])}_spatial_cut_{new_file_includes}.{name.split('.')[-1]}"
             print(f'extracting region: {name} to {name_new} in {path} ...')
             os.system(f'cdo -sellonlatbox,{lonmin},{lonmax},{latmin},{latmax} {pjoin(path, name)} {pjoin(path, name_new)}')
-        
+
 
 def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
-    """
-    Calculates the first two statistical moments and the coefficient of variation in the specified dimension. Takes a xarray dataset as input.
+    """Calculates the first two statistical moments and
+    the coefficient of variation in the specified dimension.
+
+    Parameters:
+    -----------
+        ds : xr.Dataset
+        dim_aggregator : str
+            coordinate to calculate the statistical moments over
+        time_constraint : str
+            longitude
+
+    Returns
+    -------
+    xr.DataArray
+        covariance array
     """
     if dim_aggregator == 'spatial':
         dim_aggregator = ['latitude', 'longitude']
     else:
-        dim_aggregator='time'
+        dim_aggregator = 'time'
 
     if time_constraint == 'seasonally':
         mu = ds.groupby('time.season').mean(dim=dim_aggregator)
@@ -119,9 +132,23 @@ def calc_stat_moments(ds, dim_aggregator='time', time_constraint=None):
     return ds_new
 
 
-def spatial_cov(da, lat=48, lon=15, time_constraint=None):
-    """
-    Calculates the spatial covariance for the specified point (lat, lon) under the specified time constraint.
+def spatial_cov(da, lat=48, lon=15):
+    """Calculates the spatial (auto)-covariance for the specified point (lat, lon)
+    under the specified time constraint.
+
+    Parameters:
+    -----------
+        da : xr.DataArray
+            contains the 3-dimensional array (time, latitude, longitude)
+        lat : float
+            latitude
+        lon : float
+            longitude
+
+    Returns
+    -------
+    xr.DataArray
+        covariance array
     """
     import numpy as np
     if not isinstance(da, xr.core.dataarray.DataArray):
@@ -138,8 +165,19 @@ def spatial_cov(da, lat=48, lon=15, time_constraint=None):
 
 
 def spatial_cov_2var(da_point, da):
-    """
-    Calculates the spatial covariance for the point series da_point and the 3D data array da.
+    """Calculates the spatial covariance between `da_point` and `da`.
+
+    Parameters
+    ----------
+    da_point : xr.DataArray
+        contains timeseries data (no spatial coordinates)
+    da : xr.DataArray
+        contains the 3-dimensional array (time, latitude, longitude)
+
+    Returns
+    -------
+    xr.DataArray
+        covariance array
     """
     import numpy as np
     if not isinstance(da, xr.core.dataarray.DataArray):
@@ -149,8 +187,8 @@ def spatial_cov_2var(da_point, da):
     da_point = da_point.where(~np.isnan(da_point), 0)
     da = da.load()
     da_point = da_point.load()
-    anomalies = (da - da.mean('time'))#/da.std(dim='time')
-    anomalies_point = (da_point - da_point.mean('time'))#/da_point.std(dim='time')
+    anomalies = (da - da.mean('time'))
+    anomalies_point = (da_point - da_point.mean('time'))
     scal_prod = (anomalies_point.dot(anomalies)).compute()
     stds = (da_point.std(dim='time')*da.std(dim='time')).compute()
     total_num = da.time.shape[0]
@@ -159,27 +197,73 @@ def spatial_cov_2var(da_point, da):
 
 def open_data(path, kw='era5'):
     """
-    Opens all available ERA5/glofas datasets (depending on the keyword) in the specified path and
-    resamples time to match the timestamp /per day (through the use of cdo YYYYMMDD 23z is the
-    corresponding timestamp) in the case of era5, or renames lat lon in the case of glofas.
+    Opens all available ERA5/glofas datasets (depending on the keyword) in
+    the specified path and resamples time to match the timestamp /per day (through
+    the use of cdo YYYYMMDD 23z is the corresponding timestamp) in the case of era5,
+    or renames lat lon in the case of glofas.
     """
     combine = 'by_coords'
-    if kw is 'era5':    
+    if kw == 'era5':
         ds = xr.open_dataset(path+'era5_danube_pressure_and_single_levels.nc')
         static = xr.open_dataset(path+'era5_slt_z_slor_lsm_stationary_field.nc')
         static = static.isel(time=0).drop('time')
         static = static.rename(dict(z='z_topo'))
         ds = xr.merge([ds, static])
-    elif kw is 'glofas_ra':
+    elif kw == 'glofas_ra':
         ds = xr.open_mfdataset(path+'*glofas_reanalysis*', combine=combine)
         ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
-    elif kw is 'glofas_fr':
+    elif kw == 'glofas_fr':
         ds = xr.open_mfdataset(path+'*glofas_forecast*', combine=combine)
         ds = ds.rename({'lat': 'latitude', 'lon': 'longitude'})
     return ds
 
 
 def shift_time(ds, value):
+    """Shift the time coordinate, i.e. add a certain number of hours
+    to the coordinate values.
+    """
     ds.coords['time'].values = pd.to_datetime(ds.coords['time'].values) + value
     return ds
 
+
+def calc_area(da, resolution_degrees=None):
+    """Calculate the area for each gridpoint of a 2-dimensional DataArray.
+
+    Approximations: spherical earth, gridbox is a square of area dx*dy
+
+    Parameters
+    ----------
+        da : xr.DataArray
+            a 2-dimensional array with coordinates `latitude` and `longitude`
+
+        resolution_degrees : float
+            grid resolution in degrees latitude/longitude, e.g. 0.25
+
+    Returns
+    -------
+    xr.DataArray
+        contains the area per gridbox in m^2
+    """
+    km_deg = 111319  # meters per degree latitude
+
+    if not resolution_degrees:
+        if (len(da.latitude) < 2 or len(da.longitude) < 2):
+            raise ValueError('Either lat or lon is singleton, cannot infer'
+                             ' resolution, pass `resolution_degrees` to continue!')
+        res_lat = abs(da.latitude[0].values-da.latitude[1].values)
+        res_lon = abs(da.longitude[0].values-da.longitude[1].values)
+    else:
+        res_lat = resolution_degrees
+        res_lon = resolution_degrees
+
+    lats = da.latitude.values[:, np.newaxis]*np.ones(len(da.longitude))
+    dx = km_deg*abs(np.cos(lats/90))*res_lon
+    dy = km_deg*res_lat
+    for var in da:
+        area = dx*dy
+        area = xr.DataArray(area, dims=['latitude', 'longitude'],
+                            coords=dict(latitude=('latitude', da.latitude),
+                                        longitude=('longitude', da.longitude)))
+        area.name = 'area'
+        area.attrs['units'] = 'meters'
+        return area

@@ -4,7 +4,9 @@ _Store
 *~
 /__pychache__/
 ml_flood_config.py
-/data/
+/data/*
+!data/smallsampledata-glofas.nc
+!data/smallsampledata-era5.nc
 docs/dask-worker-space/
 /python/__pycache__/
 /python/dask-worker-space/
