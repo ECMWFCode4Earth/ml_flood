@@ -1,10 +1,12 @@
-import os, warnings
+import os
+import warnings
 import numpy as np
-np.seterr(divide='ignore', invalid='ignore')
+
 import matplotlib.pyplot as plt
+from dask import delayed
 import xarray as xr
 
-from joblib import Parallel, delayed  #  parallel computation
+# from joblib import Parallel, delayed  # parallel computation
 from joblib import dump, load   # saving and loading pipeline objects ("models")
 
 from sklearn.base import clone
@@ -20,6 +22,7 @@ import keras
 from keras.layers.core import Dropout
 
 from .utils_flowmodel import select_upstream, preprocess_reshape_flowmodel
+np.seterr(divide='ignore', invalid='ignore')
 
 
 def add_time(vector, time, name=None):
@@ -31,11 +34,11 @@ class FlowModel(object):
     """Model selection & Xarray compatibility"""
     def __init__(self, kind, model_config):
         self.kind = kind
-        if kind=='neural_net':
+        if kind == 'neural_net':
             self.m = FlowModel_DNN(**model_config)
-        elif kind=='xgboost':
+        elif kind == 'xgboost':
             self.m = XGBRegressor(**model_config)
-        elif kind=='Ridge':
+        elif kind == 'Ridge':
             self.m = RidgeCV(**model_config)
         else:
             raise NotImplementedError(str(kind)+' not defined')
@@ -48,6 +51,7 @@ class FlowModel(object):
         a = self.m.predict(Xda.values).squeeze()
         return add_time(a, Xda.time, name=name)
 
+
 class FlowModel_DNN(object):
     """Define the internals of the neural-network transport model."""
     def __init__(self, **kwargs):
@@ -56,41 +60,37 @@ class FlowModel_DNN(object):
 
         model.add(keras.layers.BatchNormalization())
 
-        #model.add(Dropout(0.25))
+        # model.add(Dropout(0.25))
         model.add(keras.layers.Dense(8,
-                                  kernel_initializer=keras.initializers.Zeros(),
-                                  kernel_regularizer=keras.regularizers.l2(1e-4),
-                                  bias_initializer='zeros',
-                                  activation='relu'))
+                  kernel_initializer=keras.initializers.Zeros(),
+                  kernel_regularizer=keras.regularizers.l2(1e-4),
+                  bias_initializer='zeros',
+                  activation='relu'))
 
         model.add(keras.layers.Dense(1, activation='linear'))
 
-        #opti = keras.optimizers.RMSprop(lr=.05)
+        # opti = keras.optimizers.RMSprop(lr=.05)
         opti = keras.optimizers.Adadelta(lr=0.05, rho=0.95, epsilon=None, decay=0.0)
-        #opti = keras.optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.8, nesterov=True)
+        # opti = keras.optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.8, nesterov=True)
 
         model.compile(loss='mean_squared_error',
                       optimizer=opti)
         self.model = model
 
         self.callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
-                            min_delta=1, patience=100, verbose=0, mode='auto',
-                            baseline=None, restore_best_weights=True),]
-
+                          min_delta=1, patience=100, verbose=0, mode='auto',
+                          baseline=None, restore_best_weights=True), ]
 
     def predict(self, Xda):
         return self.model.predict(Xda)
 
     def fit(self, Xda, yda, **kwargs):
-        return self.model.fit(Xda, yda.reshape(-1,1),
+        return self.model.fit(Xda, yda.reshape(-1, 1),
                               epochs=self.cfg.get('epochs', None),
                               batch_size=512,
                               callbacks=self.callbacks,
                               verbose=0,
                               **kwargs)
-
-
-
 
 @delayed
 def train_flowmodel(X, y, pipe,
@@ -194,7 +194,7 @@ def train_flowmodel(X, y, pipe,
             except Exception as e:
                 warnings.warn(str(e))
 
-                
+
 class LocalModel_DNN(object):
     """Define the internals of the neural-network transport model."""
     def __init__(self, **kwargs):
@@ -240,7 +240,7 @@ class LocalModel_DNN(object):
                               callbacks=self.callbacks,
                               verbose=0,
                               **kwargs)
-                
+
 class LocalModel(object):
     """Model selection & Xarray compatibility,
     currently the same as FlowModel
@@ -266,6 +266,3 @@ class LocalModel(object):
         # use with xarray, return xarray
         a = self.m.predict(Xda.values).squeeze()
         return add_time(a, Xda.time, name=name)
-    
-    
-    

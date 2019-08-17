@@ -8,10 +8,13 @@ import xarray as xr
 Contains various utility methods
 """
 
+
 def rename_files(path, old, new, str_constraint=None):
-    """
-    loops through the given directory and replaces the specified part of a filename with the new part
-    the str_constrait variable can be used to only include files, which include a specified string
+    """Replace a part of a filename for all files in a directory.
+
+    Loops through the given directory and replaces the specified part of a filename
+    with the new part; the str_constrait variable can be used to only include files,
+    which include a specified string.
     """
     for name in os.listdir(path):
         if str_constraint:
@@ -224,6 +227,14 @@ def shift_time(ds, value):
     """
     ds.coords['time'].values = pd.to_datetime(ds.coords['time'].values) + value
     return ds
+
+
+def nandot(a, b, **kwargs):
+    """Like xr.dot(), but treats NaN as zero."""
+    a = a.where(~np.isnan(a), other=0.)
+    b = b.where(~np.isnan(b), other=0.)
+    s = xr.dot(a, b, **kwargs)
+    return s
 
 
 def calc_area(da, resolution_degrees=None):
