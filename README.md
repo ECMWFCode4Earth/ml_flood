@@ -27,7 +27,7 @@ Additionally, the results can be compared with GloFAS forecast reruns as well. T
 
 Our projected workflow can be seen below:
 
-![img](https://raw.githubusercontent.com/esowc/ml_flood/dev/docs/resources/MATEHIW_flowchart.png)
+![img](https://raw.githubusercontent.com/esowc/ml_flood/master/notebooks/resources/MATEHIW_flowchart.png)
 
 
 ### Dependencies and Setup
@@ -52,20 +52,20 @@ The folder structure will be as you would expect from the github webpage:
 .
 +-- data/
 +-- notebooks/
-|   +-- data_download_analysis_visualization/
-|   +-- preprocessing/
-|   +-- model_tests/
-|   +-- coupled_model/
+|   +-- 1_data_download_analysis_visualization/
+|   +-- 2_preprocessing/
+|   +-- 3_model_tests/
+|   +-- 4_coupled_model/
 |   +-- resources/
 +-- python/
 |   +-- aux/
 ```
-The data folder contains the small test dataset included in the repository. The notebooks folder contains all fully-reproducible notebooks that work with the small test dataset, except for the `coupled_model/` folder. The `python/` folder contains work in progress scripts that were written in the process of creating this repo and may contain errors or be incomplete.
+The `data/` folder contains the small test dataset included in the repository. The notebooks folder contains all fully-reproducible notebooks that work with the small test dataset, except for the `4_coupled_model/` folder. The `python/` folder contains work in progress scripts that were written in the process of creating this repo and may contain errors or be incomplete.
 
 
 ### Data description
 We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/master/notebooks/003_data_overview.ipynb). 
-For reproducibility, a small testing dataset is included in the folder `./data/` it allows you to execute all notebooks in the  `./notebooks/` folder except for notebooks in `./notebooks/coupled_model/` which need data from a larger domain.
+For reproducibility, a small testing dataset is included in the folder `./data/` it allows you to execute all notebooks in the  `./notebooks/` folder except for notebooks in `./notebooks/4_coupled_model/` which need data from a larger domain.
 
 ### Model structure
 We implemented two major structures of ML models:
