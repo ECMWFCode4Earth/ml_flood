@@ -60,7 +60,7 @@ The folder structure will be as you would expect from the github webpage:
 +-- python/
 |   +-- aux/
 ```
-The `data/` folder contains the small test dataset included in the repository. The notebooks folder contains all fully-reproducible notebooks that work with the small test dataset, except for the `4_coupled_model/` folder. The `python/` folder contains work in progress scripts that were written in the process of creating this repo and may contain errors or be incomplete.
+The `data/` folder contains the small test dataset included in the repository. The notebooks folder contains all fully-reproducible notebooks that work with the small test dataset, except for the `4_coupled_model/` folder. The `python/` folder contains work in progress scripts that were written in the process of creating this repo and may contain errors or be incomplete. The `python/aux/` folder contains collections of code that is used throughout the notebooks.
 
 
 ### Data description
