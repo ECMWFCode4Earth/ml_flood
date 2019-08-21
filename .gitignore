@@ -2,6 +2,7 @@
 _Store
 .ipynb_checkpoints
 *~
+.*
 /__pychache__/
 ml_flood_config.py
 /data/*
