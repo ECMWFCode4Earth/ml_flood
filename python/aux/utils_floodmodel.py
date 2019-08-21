@@ -199,16 +199,15 @@ def cluster_by_discharge(dis_2d, bin_edges):
                                   longitude=('longitude', dis_2d.longitude)))
 
 
-def preprocess_reshape_flowmodel(X_dis, y):
+def reshape_scalar_predictand(X_dis, y):
     """Reshape, merge predictor/predictand in time, drop nans.
-
     Parameters
     ----------
         X_dis : xr.Dataset
             variables: time shifted predictors (name irrelevant)
             coords: time, latitude, longitude
         y : xr.DataArray
-            coords: time, latitude, longitude
+            coords: time
     """
     if isinstance(X_dis, xr.Dataset):
         X_dis = X_dis.to_array(dim='var_dimension')
@@ -236,7 +235,6 @@ def preprocess_reshape_flowmodel(X_dis, y):
         if coord in yar.coords:
             yar = yar.drop(coord)
 
-    print(Xar, yar)
     # merge times
     yar.coords['features'] = 'predictand'
     Xy = xr.concat([Xar, yar], dim='features')  # maybe merge instead concat?
@@ -245,4 +243,42 @@ def preprocess_reshape_flowmodel(X_dis, y):
 
     Xda = Xyt[:, :-1]  # last column is predictand
     yda = Xyt[:, -1].drop('features')  # features was only needed in merge
+    return Xda, yda, time
+
+
+def reshape_vector_predictand(X_dis, y):
+    """Reshape, merge predictor/predictand in time, drop nans.
+    Parameters
+    ----------
+        X_dis : xr.Dataset
+            variables: time shifted predictors (name irrelevant)
+            coords: time, latitude, longitude
+        y : xr.DataArray (multiple variables, multiple timesteps)
+            coords: time, forecast_day
+    """
+    if isinstance(X_dis, xr.Dataset):
+        X_dis = X_dis.to_array(dim='var_dimension')
+
+    # stack -> seen as one dimension for the model
+    stack_dims = [a for a in X_dis.dims if a != 'time']  # all except time
+    X_dis = X_dis.stack(features=stack_dims)
+    Xar = X_dis.dropna('features', how='all')  # drop features that only contain NaN
+
+    if not isinstance(y, xr.DataArray):
+        raise TypeError('Supply `y` as xr.DataArray.'
+                        'with coords (time, forecast_day)!')
+
+    # to be sure that these dims are not in the output
+    for coord in ['latitude', 'longitude']:
+        if coord in y.coords:
+            y = y.drop(coord)
+
+    out_dim = len(y.forecast_day)
+    y.coords['features'] = 'predictand'
+    Xy = xr.concat([Xar, y], dim='features')  # maybe merge instead concat?
+    Xyt = Xy.dropna('time', how='any')  # drop rows with nan values
+    time = X_dis.time
+
+    Xda = Xyt[:, :-out_dim]  # last column is predictand
+    yda = Xyt[:, -out_dim:].drop('features')  # features was only needed in merge
     return Xda, yda, time
