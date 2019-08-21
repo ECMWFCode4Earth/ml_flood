@@ -6,13 +6,12 @@
 
 **Team:** [@lkugler](https://github.com/lkugler), [@seblehner](https://github.com/seblehner)
 
-### The project is work in progress and will be frequently updated!
-
 ## Table of Contents
 
 
 * [Project description](#Project-description)
 * [Dependencies and Setup](#Dependencies-and-Setup)
+* [Folder structure](#Folder-structure)
 * [Data description](#Data-description)
 * [Model structure](#Model-structure)
 * [ML techniques](#ML-techniques)
@@ -30,39 +29,65 @@ Our projected workflow can be seen below:
 
 ![img](https://raw.githubusercontent.com/esowc/ml_flood/dev/docs/resources/MATEHIW_flowchart.png)
 
+
 ### Dependencies and Setup
-**Some modules require Python 3!** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `
+**This repository was created for Python3** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `
 ```sh
 conda env create -f environment.yml
 ```
-inside the
+for a one-step installation of all dependencies. When installed, a new environment named **ml_flood** is created. Remember to use
 ```sh
-/ml_flood/
+bash; conda activate ml_flood
 ```
-folder for a one-step installation of all dependencies. When installed, a new environment named **ml_flood** is created. Remember to use
+before executing any script to ensure all packages exist.
+
+#### Folder structure
+To experiment with the notebooks, download the repository to your local device:
 ```sh
-source activate ml_flood
+git clone https://github.com/esowc/ml_flood.git
 ```
-before executing any files.
+A folder `ml_flood` has been created. It not only includes the notebooks but also a dataset for you to experiment around and develop your own extensions to existing models.
+The folder structure will be as you would expect from the github webpage:
+```
+.
++-- data/
++-- notebooks/
+|   +-- data_download_analysis_visualization/
+|   +-- preprocessing/
+|   +-- model_tests/
+|   +-- coupled_model/
+|   +-- resources/
++-- python/
+|   +-- aux/
+```
+The data folder contains the small test dataset included in the repository. The notebooks folder contains all fully-reproducible notebooks that work with the small test dataset, except for the `coupled_model/` folder. The `python/` folder contains work in progress scripts that were written in the process of creating this repo and may contain errors or be incomplete.
 
 
 ### Data description
-We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/dev/docs/003_data_overview.ipynb).
-
+We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/master/notebooks/003_data_overview.ipynb). 
+For reproducibility, a small testing dataset is included in the folder `./data/` it allows you to execute all notebooks in the  `./notebooks/` folder except for notebooks in `./notebooks/coupled_model/` which need data from a larger domain.
 
 ### Model structure
-Our model structure is layed out in the flowchart below. Due to the large inluence on different features as well as their spatial and temporal state, we split the whole process up into two models. The first encompasses changes in discharge happening due to non-local reasons (e.g. large-scale precipitation a few hundred kilometres upstream, affecting the flow at a certain point a few days later) and the second includes local effects from features like precipitation and their impact on discharge. For more detail see the notebooks in the **/docs/** folder.
+We implemented two major structures of ML models:
+  - The simpler, catchment based model
+  which predicts the timeseries of discharge at a certain point given *upstream* precipitation etc. from ERA5.
+  - The more complex, regional *coupled model*
+  which predicts the next state (timestep) of river discharge from previous states (discharges) and water input (from the atmosphere). It is physics inspired and splits up the prediction of discharge at a certain point into 
+    - water inflow from upstream river gridpoints and
+    - water inflow from subsurface flow and smaller rivers.
+  The model is fitted for every river gridpoint separately, thus making the training process more complex than applying a single model to all gridpoints.
 
-![img](https://raw.githubusercontent.com/esowc/ml_flood/dev/docs/resources/model-steps_v2-1.png)
+The model structure of the regional *coupled model* is layed out in the flowchart below. The model takes the influence of different features as well as their spatial and temporal state  into account by spliting the whole process up into two models. The first encompasses changes in discharge happening due to non-local reasons (e.g. large-scale precipitation a few hundred kilometres upstream, affecting the flow at a certain point a few days later through river flow) and the second includes local effects from features like precipitation/runoff and their impact on discharge by subsurface flow or smaller rivers. For more detail see the notebooks in the **/notebooks/** folder.
 
+<img src="https://raw.githubusercontent.com/esowc/ml_flood/master/notebooks/resources/model-steps_v2-1.png" alt="model-steps" width="500"/>
 
 ### ML techniques
-Currently implemented:
-  - Dense Neural Net via keras
+The techniques include:
+  - (Time-delayed) Neural Net via keras
   - RidgeCV via sklearn
   - xgboost via dask_ml
   
 work in progress
 
 ### Acknowledgments
-We acknowledge the support of ECMWF for bringing this project to life!
+We acknowledge the support of ECMWF and Copernicus for bringing this project to life!
