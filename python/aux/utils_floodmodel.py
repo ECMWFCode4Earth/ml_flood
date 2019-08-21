@@ -122,7 +122,11 @@ def add_shifted_variables(ds, shifts, variables='all'):
         for i in shifts:
             if i == 0:
                 continue  # zero-shift is the original timeseries
-            newvar = var+'_'+str(i)
+            if i > 0:
+                sign = '-'
+            else:
+                sign = '+'
+            newvar = var+sign+str(i)
             ds[newvar] = ds[var].shift(time=i)
     return ds
 
@@ -239,14 +243,13 @@ def reshape_scalar_predictand(X_dis, y):
     yar.coords['features'] = 'predictand'
     Xy = xr.concat([Xar, yar], dim='features')  # maybe merge instead concat?
     Xyt = Xy.dropna('time', how='any')  # drop rows with nan values
-    time = Xyt.time
 
     Xda = Xyt[:, :-1]  # last column is predictand
     yda = Xyt[:, -1].drop('features')  # features was only needed in merge
-    return Xda, yda, time
+    return Xda, yda
 
 
-def reshape_vector_predictand(X_dis, y):
+def reshape_multiday_predictand(X_dis, y):
     """Reshape, merge predictor/predictand in time, drop nans.
     Parameters
     ----------
@@ -274,11 +277,11 @@ def reshape_vector_predictand(X_dis, y):
             y = y.drop(coord)
 
     out_dim = len(y.forecast_day)
-    y.coords['features'] = 'predictand'
+    y = y.rename(dict(forecast_day='features'))  # rename temporarily
     Xy = xr.concat([Xar, y], dim='features')  # maybe merge instead concat?
     Xyt = Xy.dropna('time', how='any')  # drop rows with nan values
-    time = X_dis.time
 
     Xda = Xyt[:, :-out_dim]  # last column is predictand
-    yda = Xyt[:, -out_dim:].drop('features')  # features was only needed in merge
-    return Xda, yda, time
+    yda = Xyt[:, -out_dim:]  # features was only needed in merge
+    yda = yda.rename(dict(features='forecast_day'))  # change renaming back to original
+    return Xda, yda
