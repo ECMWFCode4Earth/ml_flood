@@ -130,7 +130,36 @@ class Map(object):
         
 def plot_ts(da, key):
     """Plot a times series for a given xarray dataarray.
+
+    Parameters
+    ----------
+    da : xr.DataArray
+        one-dimensional data array
+    key : str
+        parameter name / ylabel
     """
     p = sns.lineplot(data=da.to_pandas(), linewidth=2)
     p.set_xlabel('time')
     p.set_ylabel(key)
+    
+########### Model plotting
+
+def plot_recurrent(ax, truth, prediction):
+    """Plot predictions of recurrent nets.
+    
+    Parameters
+    ----------
+    ax : matplotlib axes object
+    truth : xr.DataArray
+        one-dimensional data array (time,)
+    prediction : xr.DataArray
+        two-dimensional data array of (init_time, forecast_day)
+    """
+    truth.plot(label='truth', linewidth=2)
+    for i, init in enumerate(prediction.init_time):
+        if not i%7==0: 
+            continue
+        df = prediction.sel(init_time=init).to_pandas()
+        df.index = [pd.Timestamp(init.values) + dt.timedelta(days=i) for i in df.index]
+        df.plot(ax=ax)
+    ax.legend(['truth'])
