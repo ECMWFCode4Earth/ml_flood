@@ -205,6 +205,7 @@ def cluster_by_discharge(dis_2d, bin_edges):
 
 def reshape_scalar_predictand(X_dis, y):
     """Reshape, merge predictor/predictand in time, drop nans.
+    
     Parameters
     ----------
         X_dis : xr.Dataset

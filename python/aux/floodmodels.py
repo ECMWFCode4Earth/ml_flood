@@ -1,6 +1,8 @@
 import os
 import warnings
 import numpy as np
+import datetime as dt
+import pandas as pd
 
 import matplotlib.pyplot as plt
 from dask import delayed
@@ -21,13 +23,47 @@ from sklearn.linear_model import RidgeCV
 import keras
 from keras.layers.core import Dropout
 
-from .utils_flowmodel import select_upstream, preprocess_reshape_flowmodel
+from .utils_flowmodel import select_upstream, reshape_scalar_predictand
 np.seterr(divide='ignore', invalid='ignore')
 
 
 def add_time(vector, time, name=None):
-    """Converts numpy arrays to xarrays with a time coordinate."""
+    """Converts numpy arrays to xarrays with a time coordinate.
+
+    Parameters
+    ----------
+    vector : np.array
+        1-dimensional array of predictions
+    time : xr.DataArray
+        the return value of `Xda.time`
+
+    Returns
+    -------
+    xr.DataArray
+    """
     return xr.DataArray(vector, dims=('time'), coords={'time': time}, name=name)
+
+
+def add_time_to_sequence_output(array, time, name=None):
+    """Add time coordinates to multiday model predictions.
+
+    Parameters
+    ----------
+    array : numpy.array
+        the prediction, 2-dimensional ('init_time', 'fxh')
+    time : xr.DataArray
+        the return value of `Xda.time`
+
+    Returns
+    -------
+    xr.DataArray
+    """
+    init_time = pd.to_datetime(time.values)-dt.timedelta(hours=1)
+    fxh = range(1, array.shape[1]+1)
+    return xr.DataArray(array, dims=('init_time', 'fxh'),
+                        coords=dict(init_time=('init_time', init_time),
+                                    fxh=('fxh', fxh),
+                                    name=name))
 
 
 class FlowModel(object):
@@ -148,7 +184,7 @@ def train_flowmodel(X, y, pipe,
             Xt = Xt.where(noprecip, drop=True)
             Xt = Xt.where(upstream, drop=True)
             yt = yt.sel(latitude=float(lat), longitude=float(lon))
-            Xda, yda, time = preprocess_reshape_flowmodel(Xt, yt)
+            Xda, yda, time = reshape_scalar_predictand(Xt, yt)
 
             X_train = Xda.loc[N_train]
             y_train = yda.loc[N_train]
