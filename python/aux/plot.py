@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 import matplotlib.pyplot as plt
 import cartopy
@@ -9,6 +10,7 @@ from cartopy.io.shapereader import Reader
 from cartopy.feature import ShapelyFeature
 import seaborn as sns
 import xarray as xr
+
 
 def choose_proj_from_xar(da):
     lon = da.coords['longitude'].values
@@ -20,64 +22,66 @@ def choose_proj_from_xar(da):
                              max_latitude=lat.max()+1, globe=None,
                              latitude_true_scale=lat_center)
 
-#        return ccrs.LambertConformal(central_longitude=lon_center, 
+#        return ccrs.LambertConformal(central_longitude=lon_center,
 #                                     central_latitude=lat.mean())
     else:
         return ccrs.PlateCarree(central_longitude=lon_center)
+
 
 class Map(object):
     """Configures a spatial map with riverlines and major drainage basins."""
     def __init__(self, projection=None, transform=ccrs.PlateCarree(),
                  figure_kws=dict(), drainage_baisins=True):
         """Set projection, transform and figure keywords for the spatial map.
-        
+
         Parameters
         ----------
         projection : cartopy.crs projection
-            if None, use Mercator (old: LambertConformal) for midlatitudes and PlateCarree for tropics
+            if None, use Mercator (old: LambertConformal) for midlatitudes and
+            PlateCarree for tropics
         transform : cartopy.crs projection
             default is PlateCarree
         figure_kws : dict
             is passed on to plt.figure()
         drainage_baisins : bool
             if True, plots drainage baisins from worldbank.org (Jul 20, 2018)
-            
+
         Usage Example
         ----------
         >>> m = Map(figure_kws=dict(figsize=(15,10)))
-        >>> fig, ax = m.plot(xar)        
+        >>> fig, ax = m.plot(xar)
         """
         self.proj = projection
         self.transform = transform
         self.fig_kws = figure_kws
         self.drainage_baisins = drainage_baisins
-        
+
     def plot(self, xar, **kwargs):
         """Wraps xr.DataArray.plot.pcolormesh and formats the plot as configured
         in the call to Map().
-        
+
         title is xar.long_name
         cbar_label is xar.units
-        
+
         Parameters
         ----------
         xar : xr.DataArray
             two-dimensional data array
         kwargs : dict
             are passed on to xr.DataArray.plot.pcolormesh()
-            
+
         Returns
         ----------
-        fig : matplotlib.pyplot.figure 
+        fig : matplotlib.pyplot.figure
         ax : matplotlib.pyplot.axis
         """
         for dim in ['longitude', 'latitude']:
             if dim not in xar.coords:
                 raise KeyError(dim+' not found in coordinates!')
-        
+
         plt.close()
         fig = plt.figure(**self.fig_kws)
-        
+
         if not self.proj:
             self.proj = choose_proj_from_xar(xar)
         ax = plt.axes(projection=self.proj)
@@ -88,23 +92,22 @@ class Map(object):
             scale='50m',
             facecolor='none')
         rivers = cfeature.NaturalEarthFeature(scale='50m', category='physical',
-                                              name='rivers_lake_centerlines', 
+                                              name='rivers_lake_centerlines',
                                               edgecolor='blue', facecolor='none')
-        
+
         ax.add_feature(countries, edgecolor='grey')
         ax.coastlines('50m')
         ax.add_feature(rivers, edgecolor='blue')
         gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True)
         gl.xlabels_top = False
-        
+
         if self.drainage_baisins:
             sf = Reader("../data/drainage_basins/Major_Basins_of_the_World.shp")
             shape_feature = ShapelyFeature(sf.geometries(),
                                            self.transform, edgecolor='black')
             ax.add_feature(shape_feature, facecolor='none', edgecolor='green')
-            
-            
-        cbar_kwargs = kwargs.pop('cbar_kwargs', dict())
+
+        # cbar_kwargs = kwargs.pop('cbar_kwargs', dict())
         subplot_kws = kwargs.pop('subplot_kws', dict())
         subplot_kws['projection'] = self.proj
 
@@ -113,21 +116,21 @@ class Map(object):
             cmap = 'RdYlGn'
         else:
             cmap = 'spring_r'
-        
+
         # colorbar preset to match height of plot
-        #if 'fraction' not in cbar_kwargs: cbar_kwargs['fraction'] = 0.015
-        
-        im = xar.plot.pcolormesh(ax=ax, transform=self.transform, 
-                                 subplot_kws=subplot_kws, 
+        # if 'fraction' not in cbar_kwargs: cbar_kwargs['fraction'] = 0.015
+        im = xar.plot.pcolormesh(ax=ax, transform=self.transform,
+                                 subplot_kws=subplot_kws,
                                  cmap=cmap,
                                  **kwargs)
         return fig, ax
 
     def plot_point(self, ax, lat, lon):
-        ax.plot(lon, lat, color='cyan', marker='o', 
-                     markersize=20, mew=4, markerfacecolor='none',
-                     transform=self.transform)
-        
+        ax.plot(lon, lat, color='cyan', marker='o',
+                markersize=20, mew=4, markerfacecolor='none',
+                transform=self.transform)
+
+
 def plot_ts(da, key):
     """Plot a times series for a given xarray dataarray.
 
@@ -141,12 +144,13 @@ def plot_ts(da, key):
     p = sns.lineplot(data=da.to_pandas(), linewidth=2)
     p.set_xlabel('time')
     p.set_ylabel(key)
-    
-########### Model plotting
+
+# ########## Model plotting
+
 
 def plot_recurrent(ax, truth, prediction):
     """Plot predictions of recurrent nets.
-    
+
     Parameters
     ----------
     ax : matplotlib axes object
@@ -157,9 +161,10 @@ def plot_recurrent(ax, truth, prediction):
     """
     truth.plot(label='truth', linewidth=2)
     for i, init in enumerate(prediction.init_time):
-        if not i%7==0: 
+        if not i % 7 == 0:
             continue
         df = prediction.sel(init_time=init).to_pandas()
-        df.index = [pd.Timestamp(init.values) + dt.timedelta(days=i) for i in df.index]
+        df.index = [pd.Timestamp(init.values)
+                    + dt.timedelta(days=int(i)) for i in df.index]
         df.plot(ax=ax)
     ax.legend(['truth'])
