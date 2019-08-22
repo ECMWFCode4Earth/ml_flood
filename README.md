@@ -27,8 +27,7 @@ Additionally, the results can be compared with GloFAS forecast reruns as well. T
 
 Our projected workflow can be seen below:
 
-![img](https://raw.githubusercontent.com/esowc/ml_flood/master/notebooks/resources/MATEHIW_flowchart.png)
-
+<img src="https://raw.githubusercontent.com/esowc/ml_flood/master/notebooks/resources/MATEHIW_flowchart.png" alt="model-steps" width="600"/>
 
 ### Dependencies and Setup
 **This repository was created for Python3** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `
