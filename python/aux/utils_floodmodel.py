@@ -1,5 +1,6 @@
 import warnings
 import numpy as np
+import pandas as pd
 import xarray as xr
 import geopandas
 from rasterio import features
@@ -15,10 +16,10 @@ def get_mask_of_basin(da, kw_basins='Danube'):
 
     Parameters:
     -----------
-        da : xr.DataArray
-            contains the coordinates
-        kw_basins : str
-            identifier of the basin in the basins dataset
+    da : xr.DataArray
+        contains the coordinates
+    kw_basins : str
+        identifier of the basin in the basins dataset
     """
     def transform_from_latlon(lat, lon):
         lat = np.asarray(lat)
@@ -57,15 +58,15 @@ def select_upstream(mask_river_in_catchment, lat, lon, basin='Danube'):
 
     Parameters
     ----------
-        mask_river_in_catchment : xr.DataArray
-            array that is True only for river gridpoints within a certain catchment
-            coords: only latitude and longitute
+    mask_river_in_catchment : xr.DataArray
+        array that is True only for river gridpoints within a certain catchment
+        coords: only latitude and longitute
 
-        lat, lon : float
-            latitude and longitude of the considered point
+    lat, lon : float
+        latitude and longitude of the considered point
 
-        basin : str
-            identifier of the basin in the basins dataset
+    basin : str
+        identifier of the basin in the basins dataset
 
     Returns
     -------
@@ -208,11 +209,11 @@ def reshape_scalar_predictand(X_dis, y):
 
     Parameters
     ----------
-        X_dis : xr.Dataset
-            variables: time shifted predictors (name irrelevant)
-            coords: time, latitude, longitude
-        y : xr.DataArray
-            coords: time
+    X_dis : xr.Dataset
+        variables: time shifted predictors (name irrelevant)
+        coords: time, latitude, longitude
+    y : xr.DataArray
+        coords: time
     """
     if isinstance(X_dis, xr.Dataset):
         X_dis = X_dis.to_array(dim='var_dimension')
@@ -252,13 +253,14 @@ def reshape_scalar_predictand(X_dis, y):
 
 def reshape_multiday_predictand(X_dis, y):
     """Reshape, merge predictor/predictand in time, drop nans.
+
     Parameters
     ----------
-        X_dis : xr.Dataset
-            variables: time shifted predictors (name irrelevant)
-            coords: time, latitude, longitude
-        y : xr.DataArray (multiple variables, multiple timesteps)
-            coords: time, forecast_day
+    X_dis : xr.Dataset
+        variables: time shifted predictors (name irrelevant)
+        coords: time, latitude, longitude
+    y : xr.DataArray (multiple variables, multiple timesteps)
+        coords: time, forecast_day
     """
     if isinstance(X_dis, xr.Dataset):
         X_dis = X_dis.to_array(dim='var_dimension')
@@ -286,3 +288,31 @@ def reshape_multiday_predictand(X_dis, y):
     yda = Xyt[:, -out_dim:]  # features was only needed in merge
     yda = yda.rename(dict(features='forecast_day'))  # change renaming back to original
     return Xda, yda
+
+
+def multiday_prediction_to_timeseries(prediction):
+    """Convert a 2-dimensional xarray to 1-dimensional with nonunique time-index.
+
+    Parameters
+    ----------
+    xar : xr.DataArray
+        2-dimensional xarray (init_time, forecast_day)
+
+    Returns
+    -------
+    xr.DataArray
+        1-dimensional (time) array with nonunique time index
+    """
+    forecast_days = len(prediction.forecast_day)
+    inits = np.array(prediction.init_time)[:, np.newaxis]
+
+    # repeat the initial time for every forecast day in a column
+    times = np.repeat(inits, forecast_days, axis=1)
+
+    # add the forecast day to each column
+    for i, day in enumerate(prediction.forecast_day.values):
+        times[:, i] += np.timedelta64(day, 'D')
+
+    times = times.ravel()
+    data = prediction.values.ravel()
+    return pd.Series(data, index=times)
