@@ -237,6 +237,14 @@ def nandot(a, b, **kwargs):
     return s
 
 
+def xr_to_datetime(xar):
+    """Convert xarray.DataArray to datetime.datetime or list of datetime."""
+    try:
+        return pd.Timestamp(xar.values)
+    except TypeError:
+        return [pd.Timestamp(a) for a in xar.values]
+
+
 def calc_area(da, resolution_degrees=None):
     """Calculate the area for each gridpoint of a 2-dimensional DataArray.
 

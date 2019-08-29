@@ -169,6 +169,6 @@ def plot_recurrent(ax, truth, prediction, each_N=7):
         time = [pd.Timestamp(da.coords['init_time'].values)
                 + dt.timedelta(days=int(i)) for i in da.coords['forecast_day'].values]
 
-        df = pd.Series(da.values[0], index=time)
+        df = pd.Series(da.values, index=time)
         df.plot(ax=ax, label=str(init))
     ax.legend(['truth', 'prediction'])
