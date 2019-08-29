@@ -119,10 +119,10 @@ class Map(object):
 
         # colorbar preset to match height of plot
         # if 'fraction' not in cbar_kwargs: cbar_kwargs['fraction'] = 0.015
-        im = xar.plot.pcolormesh(ax=ax, transform=self.transform,
-                                 subplot_kws=subplot_kws,
-                                 cmap=cmap,
-                                 **kwargs)
+        xar.plot.pcolormesh(ax=ax, transform=self.transform,
+                            subplot_kws=subplot_kws,
+                            cmap=cmap,
+                            **kwargs)
         return fig, ax
 
     def plot_point(self, ax, lat, lon):
@@ -148,7 +148,7 @@ def plot_ts(da, key):
 # ########## Model plotting
 
 
-def plot_recurrent(ax, truth, prediction):
+def plot_recurrent(ax, truth, prediction, each_N=7):
     """Plot predictions of recurrent nets.
 
     Parameters
@@ -159,12 +159,16 @@ def plot_recurrent(ax, truth, prediction):
     prediction : xr.DataArray
         two-dimensional data array of (init_time, forecast_day)
     """
-    truth.plot(label='truth', linewidth=2)
-    for i, init in enumerate(prediction.init_time):
-        if not i % 7 == 0:
+    truth.plot(label='truth', linewidth=2, ax=ax)
+    times = prediction.init_time
+    for i, init in enumerate(times):
+        if not i % each_N == 0:
             continue
-        df = prediction.sel(init_time=init).to_pandas()
-        df.index = [pd.Timestamp(init.values)
-                    + dt.timedelta(days=int(i)) for i in df.index]
-        df.plot(ax=ax)
-    ax.legend(['truth'])
+
+        da = prediction.sel(init_time=init)
+        time = [pd.Timestamp(da.coords['init_time'].values)
+                + dt.timedelta(days=int(i)) for i in da.coords['forecast_day'].values]
+
+        df = pd.Series(da.values[0], index=time)
+        df.plot(ax=ax, label=str(init))
+    ax.legend(['truth', 'prediction'])
