@@ -30,15 +30,15 @@ Our projected workflow can be seen below:
 <img src="https://raw.githubusercontent.com/esowc/ml_flood/master/notebooks/resources/MATEHIW_flowchart.png" alt="model-steps" width="600"/>
 
 ### Dependencies and Setup
-**This repository was created for Python3** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `
-```sh
-conda env create -f environment.yml
-```
-for a one-step installation of all dependencies. When installed, a new environment named **ml_flood** is created. Remember to use
-```sh
-bash; conda activate ml_flood
-```
+**This repository was created for Python3** Dependencies can be found in the **environment.yml** file. Download the repository, move it to any path you wish for. You can either install all packages by hand, or you can use `conda env create -f environment.yml` for a one-step installation of all dependencies. When installed, a new environment named **ml_flood** is created. Remember to use
+`bash; conda activate ml_flood`
 before executing any script to ensure all packages exist.
+To start `jupyter` in a specific conda environment, we had to activate the ipython kernel with
+```
+/path/to/home/.conda/envs/ml_flood/bin/python -m ipykernel install --user
+```
+before starting jupyter. Newer jupyter versions may allow you to switch environments from the menu bar inside jupyter.
+
 
 #### Folder structure
 To experiment with the notebooks, download the repository to your local device:
