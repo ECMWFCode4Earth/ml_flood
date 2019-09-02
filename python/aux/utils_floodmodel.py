@@ -251,6 +251,36 @@ def reshape_scalar_predictand(X_dis, y):
     return Xda, yda
 
 
+
+
+
+def multiday_prediction_to_timeseries(prediction):
+    """Convert a 2-dimensional xarray to 1-dimensional with nonunique time-index.
+
+    Parameters
+    ----------
+    xar : xr.DataArray
+        2-dimensional xarray (init_time, forecast_day)
+
+    Returns
+    -------
+    xr.DataArray
+        1-dimensional (time) array with nonunique time index
+    """
+    forecast_days = len(prediction.forecast_day)
+    inits = np.array(prediction.init_time)[:, np.newaxis]
+
+    # repeat the initial time for every forecast day in a column
+    times = np.repeat(inits, forecast_days, axis=1)
+
+    # add the forecast day to each column
+    for i, day in enumerate(prediction.forecast_day.values):
+        times[:, i] += np.timedelta64(day, 'D')
+
+    times = times.ravel()
+    data = prediction.values.ravel()
+    return pd.Series(data, index=times)
+
 def reshape_multiday_predictand(X_dis, y):
     """Reshape, merge predictor/predictand in time, drop nans.
 
@@ -290,29 +320,26 @@ def reshape_multiday_predictand(X_dis, y):
     return Xda, yda
 
 
-def multiday_prediction_to_timeseries(prediction):
-    """Convert a 2-dimensional xarray to 1-dimensional with nonunique time-index.
+def add_valid_time(pred):
+    """Add a another time coordinate giving the valid time of a forecast.
 
     Parameters
     ----------
-    xar : xr.DataArray
-        2-dimensional xarray (init_time, forecast_day)
+    pred : xr.DataArray
+        2-dimensional (init_time, forecast_day)
 
     Returns
     -------
     xr.DataArray
-        1-dimensional (time) array with nonunique time index
+        with an additional 'time' coordinate of forecast validity.
     """
-    forecast_days = len(prediction.forecast_day)
-    inits = np.array(prediction.init_time)[:, np.newaxis]
+    validtime = np.zeros((len(pred.init_time), len(pred.forecast_day)))
+    fcst_days = pred.forecast_day.values
 
-    # repeat the initial time for every forecast day in a column
-    times = np.repeat(inits, forecast_days, axis=1)
+    # iterate over columns and add the respective number of days
+    for i, fcst_day in enumerate(fcst_days):
+        validtime[:, i] = pred.init_time.values + np.timedelta64(fcst_day, 'D')
 
-    # add the forecast day to each column
-    for i, day in enumerate(prediction.forecast_day.values):
-        times[:, i] += np.timedelta64(day, 'D')
-
-    times = times.ravel()
-    data = prediction.values.ravel()
-    return pd.Series(data, index=times)
+    pred.coords['time'] = (('init_time', 'forecast_day'),
+                           validtime.astype(np.datetime64))
+    return pred
