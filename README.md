@@ -63,7 +63,7 @@ The `data/` folder contains the small test dataset included in the repository. T
 
 
 ### Data description
-We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/master/notebooks/003_data_overview.ipynb). 
+We use ERA5 Reanalysis and GloFAS Reanalysis and forecast rerun data. A detailed description can be found in the notebook [003_data_overview](https://github.com/esowc/ml_flood/blob/master/notebooks/1_data_download_analysis_visualization/1.03_data_overview.ipynb). 
 For reproducibility, a small testing dataset is included in the folder `./data/` it allows you to execute all notebooks in the  `./notebooks/` folder except for notebooks in `./notebooks/4_coupled_model/` which need data from a larger domain.
 
 ### Model structure
