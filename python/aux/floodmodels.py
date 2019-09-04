@@ -23,7 +23,7 @@ from sklearn.linear_model import RidgeCV
 import keras
 from keras.layers.core import Dropout
 
-from .utils_flowmodel import select_upstream, reshape_scalar_predictand
+from .utils_floodmodel import select_upstream, reshape_scalar_predictand
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -94,23 +94,25 @@ class FlowModel_DNN(object):
         model = keras.models.Sequential()
         self.cfg = kwargs
 
+        self.xscaler = StandardScaler()
+        self.yscaler = StandardScaler()
         model.add(keras.layers.BatchNormalization())
 
         # model.add(Dropout(0.25))
         model.add(keras.layers.Dense(8,
-                  kernel_initializer=keras.initializers.Zeros(),
-                  kernel_regularizer=keras.regularizers.l2(1e-4),
-                  bias_initializer='zeros',
-                  activation='relu'))
+                  # kernel_initializer=keras.initializers.Zeros(),
+                  # kernel_regularizer=keras.constraints.NonNeg(),
+                  # bias_initializer='zeros',
+                  activation='elu'))
 
         model.add(keras.layers.Dense(1, activation='linear'))
 
         # opti = keras.optimizers.RMSprop(lr=.05)
-        opti = keras.optimizers.Adadelta(lr=0.05, rho=0.95, epsilon=None, decay=0.0)
-        # opti = keras.optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.8, nesterov=True)
+        opt = keras.optimizers.Adam()  # delta(lr=0.05, rho=0.95, epsilon=None, decay=0.0)
+        # opt = keras.optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.8, nesterov=True)
 
         model.compile(loss='mean_squared_error',
-                      optimizer=opti)
+                      optimizer=opt)
         self.model = model
 
         self.callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -118,17 +120,65 @@ class FlowModel_DNN(object):
                           baseline=None, restore_best_weights=True), ]
 
     def predict(self, Xda):
-        return self.model.predict(Xda)
+        X = self.xscaler.transform(Xda.values)
+        y = self.model.predict(X).squeeze()
+        y = self.yscaler.inverse_transform(y)
+        return y
 
-    def fit(self, Xda, yda, **kwargs):
-        return self.model.fit(Xda, yda.reshape(-1, 1),
+    def fit(self, X_train, y_train, X_valid, y_valid, **kwargs):
+        X_train = self.xscaler.fit_transform(X_train.values)
+        y_train = self.yscaler.fit_transform(y_train.values.reshape(-1, 1))
+
+        X_valid = self.xscaler.transform(X_valid.values)
+        y_valid = self.yscaler.transform(y_valid.values.reshape(-1, 1))
+
+        return self.model.fit(X_train, y_train,
                               epochs=self.cfg.get('epochs', None),
-                              batch_size=512,
+                              batch_size=180,
                               callbacks=self.callbacks,
-                              verbose=0,
-                              **kwargs)
+                              verbose=0, **kwargs)
 
-@delayed
+# class FlowModel_DNN(object):
+#     """Define the internals of the neural-network transport model."""
+#     def __init__(self, **kwargs):
+#         model = keras.models.Sequential()
+#         self.cfg = kwargs
+#
+#         model.add(keras.layers.BatchNormalization())
+#
+#         # model.add(Dropout(0.25))
+#         model.add(keras.layers.Dense(8,
+#                   kernel_initializer=keras.initializers.Zeros(),
+#                   kernel_regularizer=keras.regularizers.l2(1e-4),
+#                   bias_initializer='zeros',
+#                   activation='relu'))
+#
+#         model.add(keras.layers.Dense(1, activation='linear'))
+#
+#         # opti = keras.optimizers.RMSprop(lr=.05)
+#         opti = keras.optimizers.Adadelta(lr=0.05, rho=0.95, epsilon=None, decay=0.0)
+#         # opti = keras.optimizers.SGD(lr=0.05, decay=1e-6, momentum=0.8, nesterov=True)
+#
+#         model.compile(loss='mean_squared_error',
+#                       optimizer=opti)
+#         self.model = model
+#
+#         self.callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+#                           min_delta=1, patience=100, verbose=0, mode='auto',
+#                           baseline=None, restore_best_weights=True), ]
+#
+#     def predict(self, Xda):
+#         return self.model.predict(Xda)
+#
+#     def fit(self, Xda, yda, **kwargs):
+#         return self.model.fit(Xda, yda.reshape(-1, 1),
+#                               epochs=self.cfg.get('epochs', None),
+#                               batch_size=512,
+#                               callbacks=self.callbacks,
+#                               verbose=0,
+#                               **kwargs)
+
+
 def train_flowmodel(X, y, pipe,
                     lat, lon,
                     tp, mask_river_in_catchment,
@@ -149,7 +199,8 @@ def train_flowmodel(X, y, pipe,
         fig, ax = plt.subplots()
         ax.imshow(upstream.astype(int))
         plt.title(str(N_upstream)+' upstream points for '+lats+' '+lons)
-        fig.savefig(f_upstream); plt.close('all')
+        fig.savefig(f_upstream)
+        plt.close('all')
         print(f_upstream)
 
     if debug:
@@ -159,76 +210,76 @@ def train_flowmodel(X, y, pipe,
         if debug:
             print(lats, lons, 'is spring.')
     else:
-        if os.path.isfile(f_mod):
-            if debug:
-                print('already trained.')
-        else:
-            if debug:
-                print(lats, lons, 'is danube river -> train flowmodel')
+        # if False: #os.path.isfile(f_mod):
+        #     if debug:
+        #         print('already trained.')
+        # else:
+        #     if debug:
+        #         print(lats, lons, 'is danube river -> train flowmodel')
 
-            try:
-                fig, ax = plt.subplots()
-                ax.imshow(upstream.astype(int))
-                plt.title(str(N_upstream)+' upstream points for '+lats+' '+lons)
-                fig.savefig(f_upstream); plt.close('all')
-            except:
-                pass
+        try:
+            fig, ax = plt.subplots()
+            ax.imshow(upstream.astype(int))
+            plt.title(str(N_upstream)+' upstream points for '+lats+' '+lons)
+            fig.savefig(f_upstream)
+            plt.close('all')
+        except:
+            pass
 
-            tp_box = tp.sel(latitude=slice(lat+1.5, lat-1.5),
-                            longitude=slice(lon-1.5, lon+1.5))
-            noprecip = tp_box.mean(['longitude', 'latitude']) < 0.1
+        tp_box = tp.sel(latitude=slice(lat+1.5, lat-1.5),
+                        longitude=slice(lon-1.5, lon+1.5))
+        noprecip = tp_box.mean(['longitude', 'latitude']) < 0.1
 
-            Xt = X.copy()
-            yt = y.copy()
+        Xt = X.copy()
+        yt = y.copy()
 
-            Xt = Xt.where(noprecip, drop=True)
-            Xt = Xt.where(upstream, drop=True)
-            yt = yt.sel(latitude=float(lat), longitude=float(lon))
-            Xda, yda, time = reshape_scalar_predictand(Xt, yt)
+        Xt = Xt.where(noprecip, drop=True)
+        Xt = Xt.where(upstream, drop=True)
+        yt = yt.sel(latitude=float(lat), longitude=float(lon))
+        Xda, yda = reshape_scalar_predictand(Xt, yt)
 
-            X_train = Xda.loc[N_train]
-            y_train = yda.loc[N_train]
-            X_valid = Xda.loc[N_valid]
-            y_valid = yda.loc[N_valid]
+        X_train = Xda.loc[N_train]
+        y_train = yda.loc[N_train]
+        X_valid = Xda.loc[N_valid]
+        y_valid = yda.loc[N_valid]
 
-            if debug:
-                print(X_train.shape, y_train.shape)
-                print(X_valid.shape, y_valid.shape)
-            ppipe = clone(pipe)
-            history = ppipe.fit(X_train.values, y_train.values,
-                               model__validation_data=(X_valid.values,
-                                                       y_valid.values))
+        if debug:
+            print(X_train.shape, y_train.shape)
+            print(X_valid.shape, y_valid.shape)
+        ppipe = clone(pipe)
+        history = ppipe.fit(X_train, y_train, X_valid, y_valid)
 
-            dump(ppipe, f_mod)
+        dump(ppipe, f_mod)
 
-            try:
-                h = history.named_steps['model'].m.model.history
+        try:
+            h = history.named_steps['model'].m.model.history
 
-                # Plot training & validation loss value
-                fig, ax = plt.subplots()
-                ax.plot(h.history['loss'], label='loss')
-                ax.plot(h.history['val_loss'], label='val_loss')
-                plt.title('Model loss')
-                ax.set_ylabel('Loss')
-                ax.set_xlabel('Epoch')
-                plt.legend() #['Train', 'Test'], loc='upper left')
-                ax.set_yscale('log')
-                fig.savefig(f_hist); plt.close('all')
-            except Exception as e:
-                warnings.warn(str(e))
+            # Plot training & validation loss value
+            fig, ax = plt.subplots()
+            ax.plot(h.history['loss'], label='loss')
+            ax.plot(h.history['val_loss'], label='val_loss')
+            plt.title('Model loss')
+            ax.set_ylabel('Loss')
+            ax.set_xlabel('Epoch')
+            plt.legend()  # ['Train', 'Test'], loc='upper left')
+            ax.set_yscale('log')
+            fig.savefig(f_hist)
+            plt.close('all')
+        except Exception as e:
+            warnings.warn(str(e))
 
-            ppipe = load(f_mod)
-            y_m = ppipe.predict(X_valid)
+        ppipe = load(f_mod)
+        y_m = ppipe.predict(X_valid)
 
-            try:
-                fig, ax = plt.subplots(figsize=(10,4))
-                y_m.to_pandas().plot(ax=ax)
-                y_valid.name = 'reanalysis'
-                y_valid.to_pandas().plot(ax=ax)
-                plt.legend()
-                fig.savefig(f_valid); plt.close('all')
-            except Exception as e:
-                warnings.warn(str(e))
+        try:
+            fig, ax = plt.subplots(figsize=(10, 4))
+            y_m.to_pandas().plot(ax=ax)
+            y_valid.name = 'reanalysis'
+            y_valid.to_pandas().plot(ax=ax)
+            plt.legend()
+            fig.savefig(f_valid); plt.close('all')
+        except Exception as e:
+            warnings.warn(str(e))
 
 
 class LocalModel_DNN(object):

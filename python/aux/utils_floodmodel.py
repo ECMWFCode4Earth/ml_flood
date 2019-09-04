@@ -251,9 +251,6 @@ def reshape_scalar_predictand(X_dis, y):
     return Xda, yda
 
 
-
-
-
 def multiday_prediction_to_timeseries(prediction):
     """Convert a 2-dimensional xarray to 1-dimensional with nonunique time-index.
 
@@ -280,6 +277,7 @@ def multiday_prediction_to_timeseries(prediction):
     times = times.ravel()
     data = prediction.values.ravel()
     return pd.Series(data, index=times)
+
 
 def reshape_multiday_predictand(X_dis, y):
     """Reshape, merge predictor/predictand in time, drop nans.
@@ -343,3 +341,24 @@ def add_valid_time(pred):
     pred.coords['time'] = (('init_time', 'forecast_day'),
                            validtime.astype(np.datetime64))
     return pred
+
+
+def add_future_precip(X, future_days=13):
+    """Add shifted precipitation variables.
+
+    Parameters
+    ----------
+    X : xr.Dataset
+        containing 'lsp' and 'cp' variables
+    future_days : int
+        create variables that are shifted by 1 up to `future_days`-days
+
+    Returns
+    -------
+    xr.Dataset
+        with additional shifted variables
+    """
+    for var in ['lsp', 'cp']:
+        for i in range(1, future_days+1):
+            newvar = var+'+'+str(i)
+            X[newvar] = X[var].shift(time=-i)  # future precip as current day variable

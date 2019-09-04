@@ -172,3 +172,21 @@ def plot_recurrent(ax, truth, prediction, each_N=7):
         df = pd.Series(da.values, index=time)
         df.plot(ax=ax, label=str(init))
     ax.legend(['truth', 'prediction'])
+
+
+def feature_importance_plot(xda_features, score_decreases):
+    """Bar chart of importances.
+    xda_features : xr.DataArray.features
+    score_decreases : list of np.arrays
+    """
+    labels = [e[0] for e in xda_features.values]
+    n_iter = len(score_decreases)
+    width = 1/n_iter
+    plt.subplots(figsize=(20, 5))
+
+    for c in range(n_iter):
+        x = np.arange(len(labels))+c/n_iter
+        plt.bar(x, score_decreases[c], width=-width, align='edge')
+
+    plt.grid()
+    plt.xticks(ticks=x, labels=labels, rotation=45)
