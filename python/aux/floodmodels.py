@@ -125,7 +125,9 @@ class FlowModel_DNN(object):
         y = self.yscaler.inverse_transform(y)
         return y
 
-    def fit(self, X_train, y_train, X_valid, y_valid, **kwargs):
+    def fit(self, X_train, y_train, validation_data=(None, None), **kwargs):
+        X_valid, y_valid = validation_data
+
         X_train = self.xscaler.fit_transform(X_train.values)
         y_train = self.yscaler.fit_transform(y_train.values.reshape(-1, 1))
 
@@ -247,7 +249,8 @@ def train_flowmodel(X, y, pipe,
             print(X_train.shape, y_train.shape)
             print(X_valid.shape, y_valid.shape)
         ppipe = clone(pipe)
-        history = ppipe.fit(X_train, y_train, X_valid, y_valid)
+        history = ppipe.fit(X_train, y_train,
+                            model__validation_data=(X_valid, y_valid))
 
         dump(ppipe, f_mod)
 
