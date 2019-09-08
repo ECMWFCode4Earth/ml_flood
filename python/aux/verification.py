@@ -6,11 +6,11 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 def RMSE(pred, obs):
-    return float(np.sqrt(np.mean((pred - obs)**2)))
+    return float(np.sqrt(np.nanmean((pred - obs)**2)))
 
 
 def ME(pred, obs):
-    return float(np.mean(pred - obs))
+    return float(np.nanmean(pred - obs))
 
 
 def NSE(pred, obs):
@@ -19,7 +19,7 @@ def NSE(pred, obs):
     Denominator: variance of predicting the mean value"""
     difference = pred - obs
     squarediff = np.dot(difference, difference)
-    obs_dis_anom = obs - np.mean(obs)
+    obs_dis_anom = obs - np.nanmean(obs)
     return float(1-squarediff/np.dot(obs_dis_anom, obs_dis_anom))
 
 
