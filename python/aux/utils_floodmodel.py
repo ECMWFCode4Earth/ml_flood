@@ -362,3 +362,26 @@ def add_future_precip(X, future_days=13):
         for i in range(1, future_days+1):
             newvar = var+'+'+str(i)
             X[newvar] = X[var].shift(time=-i)  # future precip as current day variable
+
+
+def add_future_vars(X, future_days=13):
+    """Add shifted variables (from future time points) to the dataset
+    for multi-day forecasts.
+    
+    Parameters
+    ----------
+        X : xr.Dataset 
+            variables: time shifted features
+            coords: time
+        future_days : int
+    """
+    if isinstance(X, xr.Dataset):
+        for var in X.variables:
+            if var not in 'time':
+                for i in range(1, future_days+1):
+                    newvar = var+'+'+str(i)
+                    # future precip as current day variable
+                    X[newvar] = X[var].shift(time=-i)
+    else:
+        raise TypeError('Input type has to be a xr.Dataset!')
+    return X
