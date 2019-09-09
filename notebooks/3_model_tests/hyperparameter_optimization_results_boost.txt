@@ -1,0 +1,25 @@
+
+Setting: n_estimators=50; learning_rate=0.1; max_depth=1 | RMSE=217.72; NSE=0.84
+Setting: n_estimators=50; learning_rate=0.1; max_depth=2 | RMSE=206.27; NSE=0.86
+Setting: n_estimators=50; learning_rate=0.1; max_depth=3 | RMSE=191.52; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=4 | RMSE=187.79; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=5 | RMSE=183.49; NSE=0.89
+Setting: n_estimators=50; learning_rate=0.1; max_depth=6 | RMSE=181.1; NSE=0.89
+Setting: n_estimators=50; learning_rate=0.1; max_depth=7 | RMSE=186.0; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=8 | RMSE=188.09; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=9 | RMSE=189.44; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=10 | RMSE=191.86; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=15 | RMSE=185.02; NSE=0.89
+Setting: n_estimators=10; learning_rate=0.1; max_depth=6 | RMSE=208.14; NSE=0.86
+Setting: n_estimators=25; learning_rate=0.1; max_depth=6 | RMSE=188.63; NSE=0.88
+Setting: n_estimators=50; learning_rate=0.1; max_depth=6 | RMSE=181.1; NSE=0.89
+Setting: n_estimators=75; learning_rate=0.1; max_depth=6 | RMSE=180.91; NSE=0.89
+Setting: n_estimators=100; learning_rate=0.1; max_depth=6 | RMSE=181.02; NSE=0.89
+Setting: n_estimators=150; learning_rate=0.1; max_depth=6 | RMSE=180.33; NSE=0.89
+Setting: n_estimators=200; learning_rate=0.1; max_depth=6 | RMSE=179.88; NSE=0.89
+Setting: n_estimators=300; learning_rate=0.1; max_depth=6 | RMSE=180.87; NSE=0.89
+Setting: n_estimators=200; learning_rate=0.01; max_depth=6 | RMSE=193.73; NSE=0.87
+Setting: n_estimators=200; learning_rate=0.05; max_depth=6 | RMSE=182.67; NSE=0.89
+Setting: n_estimators=200; learning_rate=0.1; max_depth=6 | RMSE=179.88; NSE=0.89
+Setting: n_estimators=200; learning_rate=0.2; max_depth=6 | RMSE=184.36; NSE=0.89
+Setting: n_estimators=200; learning_rate=0.3; max_depth=6 | RMSE=200.16; NSE=0.87
