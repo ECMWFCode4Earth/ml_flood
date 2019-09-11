@@ -385,3 +385,62 @@ def add_future_vars(X, future_days=13):
     else:
         raise TypeError('Input type has to be a xr.Dataset!')
     return X
+
+
+def add_time(vector, time, name=None):
+    """Converts input vector to xarray.DataArray with the corresponding input time coordinate.
+    
+    Parameters
+    ----------
+        vector : numpy.array
+        time   : xr.DataArray
+        name   : str
+    """
+    return xr.DataArray(vector, dims=('time'), coords={'time': time}, name=name)
+
+
+def generate_prediction_array(y_pred, y_truth, forecast_range=14):
+    """Convenience function to generate a [number of forecasts, forecast range] shaped xr.DataArray from the one
+    dimensional xr.DataArray input prediction and converts the predicted discharge change into absolute values,
+    starting from t=t0 with the truth/reanalysis value for each forecast.
+    
+    Parameters
+    ----------
+        y_pred          : xr.DataArray
+        y_truth         : xr.DataArray
+        forecast_range  : int
+    """
+    # reorganize data into the shape [forecast_range, number_of_forecasts]
+    # add +1 to forecast range to include the init state in the length
+    num_forecasts = int(np.floor(y_pred.shape[0]/(forecast_range+1)))
+    full_forecast_len = num_forecasts*(forecast_range+1)
+    new_pred = y_pred[:full_forecast_len].copy()
+    time_new = y_pred.time[:full_forecast_len].copy()
+    time_new_data = time_new.values.reshape([num_forecasts, (forecast_range+1)])
+    pred_multif_data = new_pred.values.reshape([num_forecasts, (forecast_range+1)])
+    # set init to truth value
+    pred_multif_data[:,0] = y_truth.where(new_pred)[0::(forecast_range+1)].values
+    # cumulative sum to accumulate the forecasted change
+    pred_multif_data_fin = np.cumsum(pred_multif_data, axis=1)
+    
+    pred_multif = xr.DataArray(pred_multif_data_fin,
+                               coords={'num_of_forecast': range(1, num_forecasts+1),
+                                       'forecast_day': range(0, forecast_range+1),
+                                       'time': (('num_of_forecast', 'forecast_day'), time_new_data)},
+                               dims=['num_of_forecast', 'forecast_day'],
+                              name = 'prediction')
+    return pred_multif
+
+
+def remove_outlier(x):
+    """Removes outliers under, over 1th, 99th percentile of the input pandas series.
+    
+    Parameters
+    ----------
+        x : pd.Series
+    """
+    x99 = x.quantile(0.99)
+    x01 = x.quantile(0.01)
+    x = x.where(x > x01).dropna()
+    x = x.where(x < x99).dropna()
+    return x

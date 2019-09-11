@@ -190,3 +190,40 @@ def feature_importance_plot(xda_features, score_decreases):
 
     plt.grid()
     plt.xticks(ticks=x, labels=labels, rotation=45)
+
+
+def plot_multif_prediction(pred_multif, y_truth, forecast_range=14, title=None):
+    """Convenience function for plotting multiforecast shaped prediction and truth.
+    Note when using the returned 'ax' variable to plot additional lines outside of the function
+    the corresponding objects need to be pd.Series (xr.DataArray objects will not be plotted
+    onto the axis)!
+    
+    Parameters
+    ----------
+        pred_multif     : xr.DataArray
+        y_truth         : xr.DataArray
+        forecast_range  : int
+        title           : str
+    """
+    fig, ax = plt.subplots(figsize=(15,5))
+    y_truth.sel({'time': pred_multif.time.values.ravel()}).to_pandas().plot(ax=ax, label='truth')
+
+    pdseries = pd.Series(data=pred_multif.sel(num_of_forecast=1).values,
+                         index=pred_multif.sel(num_of_forecast=1).time.values)
+    pdseries.plot(ax=ax, label='forecast')
+    plt.legend()
+    for i in pred_multif.num_of_forecast[1:]:
+        fcst = pd.Series(data=pred_multif.sel(num_of_forecast=i).values,
+                             index=pred_multif.sel(num_of_forecast=i).time.values)
+        fcst.plot(ax=ax)
+
+    ax.set_ylabel('river discharge [m$^3$/s]')
+        
+    y_o = y_truth.loc[{'time': pred_multif.time.values.ravel()}].values
+    y_m = pred_multif.values.ravel()
+
+    rmse = np.sqrt(np.nanmean((y_m - y_o)**2))
+    nse = 1 - np.sum((y_m - y_o)**2)/(np.sum((y_o - np.nanmean(y_o))**2))
+
+    plt.title(f"{title} | RMSE={round(float(rmse), 2)}; NSE={round(float(nse), 2)} |")
+    return fig, ax
