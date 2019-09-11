@@ -82,9 +82,10 @@ The model structure of the regional *coupled model* is layed out in the flowchar
 
 ### ML techniques
 The techniques include:
+  - LinearRegression via sklearn
+  - via SupportVectorRegressor sklearn
+  - via GradientBoostingRegressor sklearn
   - (Time-delayed) Neural Net via keras
-  - RidgeCV via sklearn
-  - xgboost via dask_ml
   
 work in progress
 
