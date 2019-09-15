@@ -148,18 +148,18 @@ def plot_ts(da, key):
 # ########## Model plotting
 
 
-def plot_recurrent(ax, truth, prediction, each_N=7):
+def plot_recurrent(ax, reana, prediction, each_N=7):
     """Plot predictions of recurrent nets.
 
     Parameters
     ----------
     ax : matplotlib axes object
-    truth : xr.DataArray
+    reana : xr.DataArray
         one-dimensional data array (time,)
     prediction : xr.DataArray
         two-dimensional data array of (init_time, forecast_day)
     """
-    truth.plot(label='truth', linewidth=2, ax=ax)
+    reana.plot(label='reanalysis', linewidth=2, ax=ax)
     times = prediction.init_time
     for i, init in enumerate(times):
         if not i % each_N == 0:
@@ -171,7 +171,7 @@ def plot_recurrent(ax, truth, prediction, each_N=7):
 
         df = pd.Series(da.values, index=time)
         df.plot(ax=ax, label=str(init))
-    ax.legend(['truth', 'prediction'])
+    ax.legend(['reanalysis', 'prediction'])
 
 
 def feature_importance_plot(xda_features, score_decreases):
@@ -192,21 +192,23 @@ def feature_importance_plot(xda_features, score_decreases):
     plt.xticks(ticks=x, labels=labels, rotation=45)
 
 
-def plot_multif_prediction(pred_multif, y_truth, forecast_range=14, title=None):
-    """Convenience function for plotting multiforecast shaped prediction and truth.
-    Note when using the returned 'ax' variable to plot additional lines outside of the function
-    the corresponding objects need to be pd.Series (xr.DataArray objects will not be plotted
-    onto the axis)!
-    
+def plot_multif_prediction(pred_multif, y_reana, forecast_range=14, title=None):
+    """Convenience function for plotting multiforecast shaped prediction and reanalysis.
+
+    Note when using the returned 'ax' variable to plot additional lines outside of
+    the function the corresponding objects need to be pd.Series (xr.DataArray objects
+    will not be plotted onto the axis)!
+
     Parameters
     ----------
         pred_multif     : xr.DataArray
-        y_truth         : xr.DataArray
+        y_reana         : xr.DataArray
         forecast_range  : int
         title           : str
     """
-    fig, ax = plt.subplots(figsize=(15,5))
-    y_truth.sel({'time': pred_multif.time.values.ravel()}).to_pandas().plot(ax=ax, label='truth')
+    fig, ax = plt.subplots(figsize=(15, 5))
+    y_reana.sel({'time': pred_multif.time.values.ravel()}
+                ).to_pandas().plot(ax=ax, label='reanalysis')
 
     pdseries = pd.Series(data=pred_multif.sel(num_of_forecast=1).values,
                          index=pred_multif.sel(num_of_forecast=1).time.values)
@@ -214,12 +216,12 @@ def plot_multif_prediction(pred_multif, y_truth, forecast_range=14, title=None):
     plt.legend()
     for i in pred_multif.num_of_forecast[1:]:
         fcst = pd.Series(data=pred_multif.sel(num_of_forecast=i).values,
-                             index=pred_multif.sel(num_of_forecast=i).time.values)
+                         index=pred_multif.sel(num_of_forecast=i).time.values)
         fcst.plot(ax=ax)
 
     ax.set_ylabel('river discharge [m$^3$/s]')
-        
-    y_o = y_truth.loc[{'time': pred_multif.time.values.ravel()}].values
+
+    y_o = y_reana.loc[{'time': pred_multif.time.values.ravel()}].values
     y_m = pred_multif.values.ravel()
 
     rmse = np.sqrt(np.nanmean((y_m - y_o)**2))
