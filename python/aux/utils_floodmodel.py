@@ -367,13 +367,13 @@ def add_future_precip(X, future_days=13):
 def add_future_vars(X, future_days=13):
     """Add shifted variables (from future time points) to the dataset
     for multi-day forecasts.
-    
+
     Parameters
     ----------
-        X : xr.Dataset 
-            variables: time shifted features
-            coords: time
-        future_days : int
+    X : xr.Dataset
+        variables: time shifted features
+        coords: time
+    future_days : int
     """
     if isinstance(X, xr.Dataset):
         for var in X.variables:
@@ -389,12 +389,12 @@ def add_future_vars(X, future_days=13):
 
 def add_time(vector, time, name=None):
     """Converts input vector to xarray.DataArray with the corresponding input time coordinate.
-    
+
     Parameters
     ----------
-        vector : numpy.array
-        time   : xr.DataArray
-        name   : str
+    vector : numpy.array
+    time   : xr.DataArray
+    name   : str
     """
     return xr.DataArray(vector, dims=('time'), coords={'time': time}, name=name)
 
@@ -402,13 +402,13 @@ def add_time(vector, time, name=None):
 def generate_prediction_array(y_pred, y_truth, forecast_range=14):
     """Convenience function to generate a [number of forecasts, forecast range] shaped xr.DataArray from the one
     dimensional xr.DataArray input prediction and converts the predicted discharge change into absolute values,
-    starting from t=t0 with the reanalysis value for each forecast.
-    
+    starting from t=t0 with the truth/reanalysis value for each forecast.
+
     Parameters
     ----------
-        y_pred          : xr.DataArray
-        y_truth         : xr.DataArray
-        forecast_range  : int
+    y_pred          : xr.DataArray
+    y_truth         : xr.DataArray
+    forecast_range  : int
     """
     # reorganize data into the shape [forecast_range, number_of_forecasts]
     # add +1 to forecast range to include the init state in the length
@@ -418,26 +418,26 @@ def generate_prediction_array(y_pred, y_truth, forecast_range=14):
     time_new = y_pred.time[:full_forecast_len].copy()
     time_new_data = time_new.values.reshape([num_forecasts, (forecast_range+1)])
     pred_multif_data = new_pred.values.reshape([num_forecasts, (forecast_range+1)])
-    # set init to reanalysis value
-    pred_multif_data[:,0] = y_truth.where(new_pred)[0::(forecast_range+1)].values
+    # set init to truth value
+    pred_multif_data[:, 0] = y_truth.where(new_pred)[0::(forecast_range+1)].values
     # cumulative sum to accumulate the forecasted change
     pred_multif_data_fin = np.cumsum(pred_multif_data, axis=1)
-    
+
     pred_multif = xr.DataArray(pred_multif_data_fin,
-                               coords={'num_of_forecast': range(1, num_forecasts+1),
-                                       'forecast_day': range(0, forecast_range+1),
-                                       'time': (('num_of_forecast', 'forecast_day'), time_new_data)},
-                               dims=['num_of_forecast', 'forecast_day'],
-                              name = 'prediction')
+                       coords={'num_of_forecast': range(1, num_forecasts+1),
+                               'forecast_day': range(0, forecast_range+1),
+                               'time': (('num_of_forecast', 'forecast_day'), time_new_data)},
+                       dims=['num_of_forecast', 'forecast_day'],
+                       name='prediction')
     return pred_multif
 
 
 def remove_outlier(x):
     """Removes outliers under, over 1th, 99th percentile of the input pandas series.
-    
+
     Parameters
     ----------
-        x : pd.Series
+    x : pd.Series
     """
     x99 = x.quantile(0.99)
     x01 = x.quantile(0.01)
@@ -446,21 +446,25 @@ def remove_outlier(x):
     return x
 
 
-def multi_forecast_case_study(pipe_case, x, y):
+def multi_forecast_case_study(pipe_case):
     """
-    Convenienve function for predicting discharge via the pre-trained input pipe. Loads glofas forecast_rerun
-    data from a in-function set path, used to evaluate the model predictions.
-    Outputs are 3 xr.DataArrays: One for the model forecast, one for the forecast reruns, one for the truth/reanalysis.
-    
+    Convenience function for predicting discharge via the pre-trained input pipe.
+    Loads glofas forecast_rerun data from a in-function set path, used to evaluate
+    the model predictions.
+    Outputs are 3 xr.DataArrays: One for the model forecast, one for the forecast reruns,
+                                 one for the truth/reanalysis.
+
     Parameters
     ----------
-        pipe_case : trained ML pipe ready for prediction
-        x         : xr.DataArray
-        y         : xr.DataArray
+    pipe_case : trainer ML pipe ready for prediction
+
+    Returns
+    -------
+    xr.DataArray (3 times)
     """
-    y_2013 = y
-    X_2013 = x
-    
+    features_2013 = xr.open_dataset('../../data/features_xy_2013.nc')
+    y_2013 = features_2013['dis']
+    X_2013 = features_2013.drop(['dis', 'dis_diff']).to_array(dim='features').T
     multif_list = []
     multifrerun_list = []
     for forecast in range(1, 5):
@@ -480,21 +484,22 @@ def multi_forecast_case_study(pipe_case, x, y):
             date_init = '2013-05-29'
             date_end = '2013-06-28'
             fr_dir = '2013052900'
-        
+
         X_case = X_2013.sel(time=slice(date_init, date_end)).copy()
-        y_case = y_2013.sel(time=slice(date_init, date_end)).copy()
-        
+        X_case = X_case.drop(dim='features', labels='lsp-56-180')
+        # y_case = y_2013.sel(time=slice(date_init, date_end)).copy()
+
         # prediction start from every nth day
         # if in doubt, leave n = 1 !!!
         n = 1
         X_pred = X_case[::n].copy()
         y_pred = pipe_case.predict(X_pred)
         y_pred = add_time(y_pred, X_pred.time, name='forecast')
-        
+
         multif_case = generate_prediction_array(y_pred, y_2013, forecast_range=30)
         multif_case.num_of_forecast.values = [forecast]
         multif_list.append(multif_case)
-        
+
         # add glofas forecast rerun data
         # glofas forecast rerun data
         frerun = xr.open_mfdataset(f'../../data/glofas-freruns/{fr_dir}/glof*', combine='by_coords')
@@ -502,21 +507,22 @@ def multi_forecast_case_study(pipe_case, x, y):
         fr = frerun['dis'].sel(lon=slice(13, 14), lat=slice(49, 48)).compute()
         fr = fr.where(~np.isnan(fr), 0).interp(poi).drop(labels=['lat', 'lon']).squeeze()
         multifrerun_list.append(fr)
-    
+
     # merge forecasts into one big array
     date_init = '2013-05-18'
     date_end = '2013-06-28'
     y_case_fin = y_2013.sel(time=slice(date_init, date_end)).copy()
-    X_case_multi_core = X_2013.sel(time=slice(date_init, date_end)).isel(features=1).copy().drop('features')*np.nan
-    
+    X_case_multi_core = X_2013.sel(time=slice(date_init, date_end)
+                                   ).isel(features=1).copy().drop('features')*np.nan
+
     X_list = []
     for fc in multif_list:
         X_iter = X_case_multi_core.copy()
         X_iter.loc[{'time': fc.time.values.ravel()}] = fc.values[0]
         X_list.append(X_iter)
     X_multif_fin = xr.concat(X_list, dim='num_of_forecast')
-    X_multif_fin.name='prediction'
-    
+    X_multif_fin.name = 'prediction'
+
     X_list = []
     for frr in multifrerun_list:
         X_iter = X_case_multi_core.copy()
@@ -529,5 +535,99 @@ def multi_forecast_case_study(pipe_case, x, y):
         ens_da = xr.concat(ens_list, dim='ensemble')
         X_list.append(ens_da)
     X_multifr_fin = xr.concat(X_list, dim='num_of_forecast')
-    X_multifr_fin.name='forecast rerun'
+    X_multifr_fin.name = 'forecast rerun'
+    return X_multif_fin, X_multifr_fin, y_case_fin
+
+
+def multi_forecast_case_study_tdnn(pipe_case):
+    """
+    Convenience function for predicting discharge via the pre-trained input pipe.
+    Loads glofas forecast_rerun data from a in-function set path, used to evaluate
+    the model predictions.
+    Outputs are 3 xr.DataArrays: One for the model forecast, one for the forecast reruns,
+                                 one for the truth/reanalysis.
+
+    Parameters
+    ----------
+    pipe_case : trainer ML pipe ready for prediction
+
+    Returns
+    -------
+    xr.DataArray (3 times)
+    """
+    features_2013 = xr.open_dataset('../../data/features_xy_2013.nc')
+    y = features_2013['dis']
+    X = features_2013.drop(['dis', 'dis_diff', 'lsp-56-180'])
+
+    X, y = reshape_scalar_predictand(X, y)
+
+    multif_list = []
+    multifrerun_list = []
+    for forecast in range(1, 5):
+        if forecast == 1:
+            date_init = '2013-05-18'
+            date_end = '2013-06-17'
+            fr_dir = '2013051800'
+        elif forecast == 2:
+            date_init = '2013-05-22'
+            date_end = '2013-06-21'
+            fr_dir = '2013052200'
+        elif forecast == 3:
+            date_init = '2013-05-25'
+            date_end = '2013-06-24'
+            fr_dir = '2013052500'
+        elif forecast == 4:
+            date_init = '2013-05-29'
+            date_end = '2013-06-28'
+            fr_dir = '2013052900'
+
+        X_case = X.sel(time=slice(date_init, date_end)).copy()
+
+        # prediction start from every nth day
+        # if in doubt, leave n = 1 !!!
+        n = 1
+        X_pred = X_case[::n].copy()
+        y_pred = pipe_case.predict(X_pred)
+
+        multif_case = generate_prediction_array(y_pred, y, forecast_range=30)
+        multif_case.num_of_forecast.values = [forecast]
+        multif_list.append(multif_case)
+
+        # add glofas forecast rerun data
+        # glofas forecast rerun data
+        frerun = xr.open_mfdataset(f'../../data/glofas-freruns/{fr_dir}/glof*',
+                                   combine='by_coords')
+        poi = dict(lat=48.35, lon=15.65)
+        fr = frerun['dis'].sel(lon=slice(15, 16), lat=slice(49, 48)).compute()
+        fr = fr.where(~np.isnan(fr), 0).interp(poi).drop(labels=['lat', 'lon']).squeeze()
+        multifrerun_list.append(fr)
+
+    # merge forecasts into one big array
+    date_init = '2013-05-18'
+    date_end = '2013-06-28'
+    y_case_fin = y.sel(time=slice(date_init, date_end)).copy()
+    X_case_multi_core = X.sel(time=slice(date_init, date_end)
+                              ).isel(features=1).copy().drop('features')*np.nan
+
+    X_list = []
+    for fc in multif_list:
+        X_iter = X_case_multi_core.copy()
+        X_iter.loc[{'time': fc.time.values.ravel()}] = fc.values[0]
+        X_list.append(X_iter)
+    X_multif_fin = xr.concat(X_list, dim='num_of_forecast')
+    X_multif_fin.name = 'prediction'
+
+    X_list = []
+    for frr in multifrerun_list:
+        X_iter = X_case_multi_core.copy()
+        ens_list = []
+        for fr_num in frr.ensemble:
+            fr_iter = frr.sel(ensemble=fr_num)
+            X_ens_iter = X_iter.copy()
+            X_ens_iter.loc[{'time': frr.time.values}] = fr_iter.values
+            ens_list.append(X_ens_iter)
+        ens_da = xr.concat(ens_list, dim='ensemble')
+        X_list.append(ens_da)
+    X_multifr_fin = xr.concat(X_list, dim='num_of_forecast')
+    X_multifr_fin.name = 'forecast rerun'
     return X_multif_fin, X_multifr_fin, y_case_fin
