@@ -159,7 +159,7 @@ def plot_recurrent(ax, truth, prediction, each_N=7):
     prediction : xr.DataArray
         two-dimensional data array of (init_time, forecast_day)
     """
-    truth.plot(label='truth', linewidth=2, ax=ax)
+    truth.plot(label='reanalysis', linewidth=2, ax=ax)
     times = prediction.init_time
     for i, init in enumerate(times):
         if not i % each_N == 0:
@@ -171,7 +171,7 @@ def plot_recurrent(ax, truth, prediction, each_N=7):
 
         df = pd.Series(da.values, index=time)
         df.plot(ax=ax, label=str(init))
-    ax.legend(['truth', 'prediction'])
+    ax.legend(['reanalysis', 'prediction'])
 
 
 def feature_importance_plot(xda_features, score_decreases):
@@ -193,7 +193,7 @@ def feature_importance_plot(xda_features, score_decreases):
 
 
 def plot_multif_prediction(pred_multif, y_truth, forecast_range=14, title=None):
-    """Convenience function for plotting multiforecast shaped prediction and truth.
+    """Convenience function for plotting multiforecast shaped prediction and reanalysis.
     Note when using the returned 'ax' variable to plot additional lines outside of the function
     the corresponding objects need to be pd.Series (xr.DataArray objects will not be plotted
     onto the axis)!
@@ -206,7 +206,7 @@ def plot_multif_prediction(pred_multif, y_truth, forecast_range=14, title=None):
         title           : str
     """
     fig, ax = plt.subplots(figsize=(15,5))
-    y_truth.sel({'time': pred_multif.time.values.ravel()}).to_pandas().plot(ax=ax, label='truth')
+    y_truth.sel({'time': pred_multif.time.values.ravel()}).to_pandas().plot(ax=ax, label='reanalysis')
 
     pdseries = pd.Series(data=pred_multif.sel(num_of_forecast=1).values,
                          index=pred_multif.sel(num_of_forecast=1).time.values)

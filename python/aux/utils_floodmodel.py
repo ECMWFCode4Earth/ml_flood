@@ -402,7 +402,7 @@ def add_time(vector, time, name=None):
 def generate_prediction_array(y_pred, y_truth, forecast_range=14):
     """Convenience function to generate a [number of forecasts, forecast range] shaped xr.DataArray from the one
     dimensional xr.DataArray input prediction and converts the predicted discharge change into absolute values,
-    starting from t=t0 with the truth/reanalysis value for each forecast.
+    starting from t=t0 with the reanalysis value for each forecast.
     
     Parameters
     ----------
@@ -418,7 +418,7 @@ def generate_prediction_array(y_pred, y_truth, forecast_range=14):
     time_new = y_pred.time[:full_forecast_len].copy()
     time_new_data = time_new.values.reshape([num_forecasts, (forecast_range+1)])
     pred_multif_data = new_pred.values.reshape([num_forecasts, (forecast_range+1)])
-    # set init to truth value
+    # set init to reanalysis value
     pred_multif_data[:,0] = y_truth.where(new_pred)[0::(forecast_range+1)].values
     # cumulative sum to accumulate the forecasted change
     pred_multif_data_fin = np.cumsum(pred_multif_data, axis=1)
@@ -446,7 +446,7 @@ def remove_outlier(x):
     return x
 
 
-def multi_forecast_case_study(pipe_case):
+def multi_forecast_case_study(pipe_case, x, y):
     """
     Convenienve function for predicting discharge via the pre-trained input pipe. Loads glofas forecast_rerun
     data from a in-function set path, used to evaluate the model predictions.
@@ -454,11 +454,12 @@ def multi_forecast_case_study(pipe_case):
     
     Parameters
     ----------
-        pipe_case : trainer ML pipe ready for prediction
+        pipe_case : trained ML pipe ready for prediction
+        x         : xr.DataArray
+        y         : xr.DataArray
     """
-    features_2013 = xr.open_dataset('../../data/features_xy_2013.nc')
-    y_2013 = features_2013['dis']
-    X_2013 = features_2013.drop(['dis', 'dis_diff']).to_array(dim='features').T
+    y_2013 = y
+    X_2013 = x
     
     multif_list = []
     multifrerun_list = []
@@ -481,7 +482,6 @@ def multi_forecast_case_study(pipe_case):
             fr_dir = '2013052900'
         
         X_case = X_2013.sel(time=slice(date_init, date_end)).copy()
-        X_case = X_case.drop(dim='features', labels='lsp-56-180')
         y_case = y_2013.sel(time=slice(date_init, date_end)).copy()
         
         # prediction start from every nth day
