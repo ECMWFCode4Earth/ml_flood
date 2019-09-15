@@ -498,8 +498,8 @@ def multi_forecast_case_study(pipe_case):
         # add glofas forecast rerun data
         # glofas forecast rerun data
         frerun = xr.open_mfdataset(f'../../data/glofas-freruns/{fr_dir}/glof*', combine='by_coords')
-        poi = dict(lat=48.35, lon=15.65)
-        fr = frerun['dis'].sel(lon=slice(15, 16), lat=slice(49, 48)).compute()
+        poi = dict(lat=48.35, lon=13.95)
+        fr = frerun['dis'].sel(lon=slice(13, 14), lat=slice(49, 48)).compute()
         fr = fr.where(~np.isnan(fr), 0).interp(poi).drop(labels=['lat', 'lon']).squeeze()
         multifrerun_list.append(fr)
     
