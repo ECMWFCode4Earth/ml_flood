@@ -227,5 +227,5 @@ def plot_multif_prediction(pred_multif, y_reana, forecast_range=14, title=None):
     rmse = np.sqrt(np.nanmean((y_m - y_o)**2))
     nse = 1 - np.sum((y_m - y_o)**2)/(np.sum((y_o - np.nanmean(y_o))**2))
 
-    plt.title(f"{title} | RMSE={round(float(rmse), 2)}; NSE={round(float(nse), 2)} |")
+    plt.title(f"{title} | RMSE={round(float(rmse), 2)}; NSE={round(float(nse), 2)} |")
     return fig, ax
