@@ -493,7 +493,6 @@ def multi_forecast_case_study(pipe_case):
         # if in doubt, leave n = 1 !!!
         n = 1
         X_pred = X_case[::n].copy()
-        print(X_pred.shape)
         y_pred = pipe_case.predict(X_pred)
         y_pred = add_time(y_pred, X_pred.time, name='forecast')
 
