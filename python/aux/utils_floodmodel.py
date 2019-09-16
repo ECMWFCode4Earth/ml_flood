@@ -547,7 +547,7 @@ def multi_forecast_case_study_tdnn(pipe_case):
     Loads glofas forecast_rerun data from a in-function set path, used to evaluate
     the model predictions.
     Outputs are 3 xr.DataArrays: One for the model forecast, one for the forecast reruns,
-                                 one for the reanalysis.
+                                 one for the truth/reanalysis.
 
     Parameters
     ----------
