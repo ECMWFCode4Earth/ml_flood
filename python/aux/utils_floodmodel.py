@@ -599,9 +599,8 @@ def multi_forecast_case_study_tdnn(pipe_case):
         # glofas forecast rerun data
         frerun = xr.open_mfdataset(f'../../data/glofas-freruns/{fr_dir}/glof*',
                                    combine='by_coords')
-        poi = dict(lat=48.35, lon=15.65)
-        fr = frerun['dis'].sel(lon=slice(15, 16), lat=slice(49, 48)).compute()
-        fr = fr.where(~np.isnan(fr), 0).interp(poi).drop(labels=['lat', 'lon']).squeeze()
+        fr = frerun['dis'].sel(lon=slice(13.9, 14.), lat=slice(48.4, 48.3))
+        fr = fr.drop(labels=['lat', 'lon']).squeeze()
         multifrerun_list.append(fr)
 
     # merge forecasts into one big array
