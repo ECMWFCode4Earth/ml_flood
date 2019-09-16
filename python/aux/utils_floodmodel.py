@@ -446,7 +446,7 @@ def remove_outlier(x):
     return x
 
 
-def multi_forecast_case_study(pipe_case):
+def multi_forecast_case_study(pipe_case, x, y):
     """
     Convenience function for predicting discharge via the pre-trained input pipe.
     Loads glofas forecast_rerun data from a in-function set path, used to evaluate
@@ -456,15 +456,17 @@ def multi_forecast_case_study(pipe_case):
 
     Parameters
     ----------
-    pipe_case : trainer ML pipe ready for prediction
+        pipe_case : trainer ML pipe ready for prediction
+        x         : xr.DataArray
+        y         : xr.DataArray
 
     Returns
     -------
     xr.DataArray (3 times)
     """
-    features_2013 = xr.open_dataset('../../data/features_xy_2013.nc')
-    y_2013 = features_2013['dis']
-    X_2013 = features_2013.drop(['dis', 'dis_diff']).to_array(dim='features').T
+    y_2013 = y
+    X_2013 = x
+    
     multif_list = []
     multifrerun_list = []
     for forecast in range(1, 5):
@@ -506,8 +508,8 @@ def multi_forecast_case_study(pipe_case):
         # glofas forecast rerun data
         frerun = xr.open_mfdataset(f'../../data/glofas-freruns/{fr_dir}/glof*', combine='by_coords')
         poi = dict(lat=48.35, lon=13.95)
-        fr = frerun['dis'].sel(lon=slice(13, 14), lat=slice(49, 48)).compute()
-        fr = fr.where(~np.isnan(fr), 0).interp(poi).drop(labels=['lat', 'lon']).squeeze()
+        fr = frerun['dis'].sel(lon=slice(13.9, 14.), lat=slice(48.4, 48.3)).compute()
+        fr = fr.where(~np.isnan(fr), 0).drop(labels=['lat', 'lon']).squeeze()
         multifrerun_list.append(fr)
 
     # merge forecasts into one big array
