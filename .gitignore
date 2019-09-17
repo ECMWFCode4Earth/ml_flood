@@ -16,3 +16,5 @@ docs/dask-worker-space/
 auto_push.sh
 autocommit
 /archive/
+/notebooks/3_model_tests/*.py
+/notebooks/3_model_tests/figures/
