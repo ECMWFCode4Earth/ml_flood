@@ -1,5 +1,7 @@
 # ml_flood
 
+### [Have a look at the jupyter notebook documentation!](https://nbviewer.jupyter.org/github/esowc/ml_flood/tree/master/notebooks/)
+
 ## ESoWC 2019 - MATEHIW // MAchine learning TEchniques for High-Impact Weather
 
 **Goal:** A comparison study between different ML algorithms on forecasting flood events using open datasets from ECMWF/Copernicus.
@@ -83,11 +85,10 @@ The model structure of the regional *coupled model* is layed out in the flowchar
 ### ML techniques
 The techniques include:
   - LinearRegression via sklearn
-  - via SupportVectorRegressor sklearn
-  - via GradientBoostingRegressor sklearn
+  - SupportVectorRegressor via sklearn
+  - GradientBoostingRegressor via sklearn
   - (Time-delayed) Neural Net via keras
   
-work in progress
 
 ### Acknowledgments
 We acknowledge the support of ECMWF and Copernicus for bringing this project to life!
