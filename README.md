@@ -1,6 +1,8 @@
 # ml_flood
 
-### [Have a look at the jupyter notebook documentation!](https://nbviewer.jupyter.org/github/esowc/ml_flood/tree/master/notebooks/)
+### [Have a look at]
+- [the jupyter notebook documentation!](https://nbviewer.jupyter.org/github/esowc/ml_flood/tree/master/notebooks/)
+- [our presentation on the showcase day @ECMWF! (pdf)](https://github.com/MATEHIW-project/matehiw-project.github.io/blob/master/assets/ESoWC2019_ml_flood_final_pres.pdf)
 
 ## ESoWC 2019 - MATEHIW // MAchine learning TEchniques for High-Impact Weather
 
