@@ -1,6 +1,6 @@
 # ml_flood
 
-### [Have a look at]
+### Have a look at
 - [the jupyter notebook documentation!](https://nbviewer.jupyter.org/github/esowc/ml_flood/tree/master/notebooks/)
 - [our presentation on the showcase day @ECMWF! (pdf)](https://github.com/MATEHIW-project/matehiw-project.github.io/blob/master/assets/ESoWC2019_ml_flood_final_pres.pdf)
 
